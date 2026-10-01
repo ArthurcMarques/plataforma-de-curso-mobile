@@ -1,5 +1,5 @@
 // Node.js 20+; nenhuma dependencia adicional. A API deve estar rodando.
-// Uso: node scripts/testar-endpoints.mjs [http://localhost:3000]
+// Na raiz do monorepo: node scripts/testar-endpoints.mjs [http://localhost:3000]
 // Cria dados proprios e tenta remove-los mesmo quando um teste falha.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';

@@ -1,4 +1,5 @@
 -- DESTRUTIVO: apaga todos os registros dos 14 modelos e reinicia seus IDs.
+-- Local: scripts/limpar-dados.sql, na raiz do monorepo.
 -- Execute no Query Tool do pgAdmin, no mesmo banco/schema do DATABASE_URL.
 -- Este arquivo considera o schema public. Ajuste se seu banco usar outro.
 -- Preserva tabelas, enums e historico de migrations (_prisma_migrations).

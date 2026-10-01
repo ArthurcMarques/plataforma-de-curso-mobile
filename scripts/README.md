@@ -1,4 +1,4 @@
-# Limpeza e testes
+# Scripts do projeto
 
 Os scripts devem ser executados manualmente. Nenhum deles inicia a API.
 
@@ -9,7 +9,7 @@ as sequencias de IDs. Preserva tabelas, enums e `_prisma_migrations`.
 Nao cria tabelas nem aplica migrations. Nao usa CASCADE: referencias externas
 as tabelas listadas fazem a operacao falhar em vez de apagar outras tabelas.
 
-1. Pare a API com Ctrl+C.
+1. Pare a API com Ctrl+C ou `docker compose stop api` na raiz.
 2. No pgAdmin, selecione o mesmo banco usado pelo `DATABASE_URL`.
 3. Confira o banco e o schema. O script usa `public` explicitamente.
 4. Abra `scripts/limpar-dados.sql` no Query Tool e execute o arquivo inteiro.
@@ -27,7 +27,7 @@ npm run build
 npm run start:dev
 ```
 
-Em outro terminal, tambem na pasta backend:
+Em outro terminal, na raiz de `plataforma-cursos`:
 
 ```powershell
 node scripts/testar-endpoints.mjs
