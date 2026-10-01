@@ -77,8 +77,8 @@ da aplicacao. Cria:
 - 14 certificados, somente para as matriculas com todas as aulas concluidas.
 - Categoria, trilha com os quatro cursos, plano, 10 assinaturas e 10 pagamentos.
 
-Na primeira execucao, sao 431 registros nas 14 tabelas. Nas seguintes, sao
-416 registros novos quando as 15 contas ja existem. Cada curso tem alunos
+Na primeira execucao em um banco vazio, sao 431 registros nas 14 tabelas.
+Nas seguintes, sao 415 registros novos quando as 15 contas e a categoria ja existem. Cada curso tem alunos
 com progresso completo, de um modulo ou de dois modulos. "Cursos completos"
 significa estrutura preenchida de modulos e aulas; os links de video, texto e
 quiz sao exemplos ficticios, sem material didatico hospedado. As transacoes
@@ -95,13 +95,19 @@ a carga reutiliza o ID e atualiza nome, perfil e senha para os valores de
 demonstracao. Nao modifica outras contas. Contas antigas com UUID no email nao
 sao renomeadas nem removidas automaticamente.
 
-Cada execucao adiciona novos cursos e dados relacionados, identificados pelo
-UUID do conjunto. Portanto, a carga completa nao e idempotente, embora os
-usuarios sejam reutilizados. Nao presume IDs fixos nem executa limpeza.
+Os nomes sao apresentados sem "Demo" ou UUID: Desenvolvimento Web,
+Desenvolvimento Full Stack, HTML e CSS na pratica, JavaScript na pratica,
+React na pratica, NestJS na pratica e Plano Mensal. Certificados e transacoes
+possuem codigos unicos com prefixos CERT e TRX, sem rotulos de demonstracao.
+
+Cada execucao adiciona novos cursos e dados relacionados. Portanto, a carga
+completa nao e idempotente, embora os usuarios e a categoria Desenvolvimento
+Web sejam reutilizados. Nao presume IDs fixos nem executa limpeza. Registros
+antigos com nomes "Demo ..." nao sao alterados por esta atualizacao do script.
 
 Se houver falha, o processo retorna codigo 1 e mantem os registros parciais.
 Nao existe transacao global entre as insercoes. Confira os modelos/IDs
-impressos e o UUID do conjunto antes de repetir; em falha de conexao, a ultima operacao
+impressos antes de repetir; em falha de conexao, a ultima operacao
 pode ter sido persistida mesmo sem resposta. Sucesso retorna codigo 0.
 
 O script foi preparado sem executar a carga no banco. Para conferir sintaxe

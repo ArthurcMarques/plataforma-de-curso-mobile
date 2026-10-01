@@ -1,6 +1,6 @@
 // Carga direta no PostgreSQL via Prisma. Nao usa HTTP, login ou token.
 // Na raiz: node scripts/popular-banco.mjs
-import { randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -31,8 +31,6 @@ if (argument !== '--database-worker') {
   process.exit(result.status ?? 1);
 }
 
-const batch = randomUUID();
-const label = `Demo ${batch}`;
 const now = new Date().toISOString();
 const later = new Date(Date.now() + 30 * 86400000).toISOString();
 const created = [];
@@ -102,7 +100,7 @@ const curriculum = [
 ];
 
 async function main() {
-  console.log(`Carga direta no PostgreSQL. Conjunto: ${batch}`);
+  console.log('Carga direta no PostgreSQL: cursos, usuarios e dados academicos.');
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL nao definida no container.');
   const require = createRequire('/app/package.json');
   const { PrismaClient } = require('./dist/src/generated/prisma/client.js');
@@ -144,17 +142,23 @@ async function main() {
     administrators.push(await account(name, 'admin', index + 1, 'ADMINISTRADOR'));
   }
 
-  const category = await create('categoria', ['ID_Categoria'], {
-    nome: `Desenvolvimento Web (${label})`, descricao: 'Formacao do HTML ao backend com NestJS.',
+  const categoryName = 'Desenvolvimento Web';
+  const existingCategory = await prisma.categoria.findUnique({ where: { Nome: categoryName } });
+  const category = await prisma.categoria.upsert({
+    where: { Nome: categoryName },
+    create: { Nome: categoryName, Descricao: 'Formacao do HTML ao backend com NestJS.' },
+    update: {},
   });
+  if (!existingCategory) created.push(`categoria: ${category.ID_Categoria}`);
+  console.log(`Categoria ${existingCategory ? 'reutilizada' : 'criada'}: ${categoryName}`);
   const track = await create('trilha', ['ID_Trilha'], {
-    titulo: `Desenvolvimento Full Stack (${label})`, descricao: 'HTML, CSS, JavaScript, React e NestJS.',
+    titulo: 'Desenvolvimento Full Stack', descricao: 'HTML, CSS, JavaScript, React e NestJS.',
     idCategoria: category.ID_Categoria,
   });
   const courses = [];
   for (const [courseIndex, definition] of curriculum.entries()) {
     const course = await create('curso', ['ID_Curso'], {
-      titulo: `${definition.topic} na pratica (${label})`, descricao: `Formacao em ${definition.topic}: fundamentos, pratica e projeto final.`,
+      titulo: `${definition.topic} na pratica`, descricao: `Formacao em ${definition.topic}: fundamentos, pratica e projeto final.`,
       idInstrutor: instructors[courseIndex % instructors.length].ID_Usuario,
       idCategoria: category.ID_Categoria, nivel: definition.level, dataPublicacao: now,
       totalAulas: definition.modules.length * 3, totalHoras: definition.modules.length,
@@ -165,7 +169,7 @@ async function main() {
       for (const [lessonIndex, type] of ['VIDEO', 'TEXTO', 'QUIZ'].entries()) {
         lessons.push(await create('aula', ['ID_Aula'], {
           idModulo: module.ID_Modulo, titulo: titles[lessonIndex], tipoConteudo: type,
-          urlConteudo: `https://example.com/demo/${definition.slug}/${moduleIndex + 1}/${lessonIndex + 1}`,
+          urlConteudo: `https://example.com/cursos/${definition.slug}/${moduleIndex + 1}/${lessonIndex + 1}`,
           duracaoMinutos: [20, 25, 15][lessonIndex], ordem: lessonIndex + 1,
         }));
       }
@@ -196,13 +200,13 @@ async function main() {
       if (completed) {
         await create('certificado', ['ID_Certificado'], {
           idUsuario: student.ID_Usuario, idCurso: course.ID_Curso,
-          codigoVerificacao: `DEMO-${batch}-${courseIndex + 1}-${studentIndex + 1}`,
+          codigoVerificacao: `CERT-${randomBytes(8).toString('hex').toUpperCase()}`,
         });
       }
     }
   }
   const plan = await create('plano', ['ID_Plano'], {
-    nome: `Mensal (${label})`, descricao: 'Acesso aos quatro cursos de demonstracao.', preco: 49.9, duracaoMeses: 1,
+    nome: 'Plano Mensal', descricao: 'Acesso ao catalogo de cursos de desenvolvimento web.', preco: 49.9, duracaoMeses: 1,
   });
   for (const [index, student] of students.entries()) {
     const subscription = await create('assinatura', ['ID_Assinatura'], {
@@ -210,7 +214,7 @@ async function main() {
     });
     await create('pagamento', ['ID_Pagamento'], {
       idAssinatura: subscription.ID_Assinatura, valorPago: 49.9, dataPagamento: now,
-      metodoPagamento: ['PIX', 'CARTAO', 'BOLETO'][index % 3], idTransacaoGateway: `DEMO-${batch}-${index + 1}`,
+      metodoPagamento: ['PIX', 'CARTAO', 'BOLETO'][index % 3], idTransacaoGateway: `TRX-${randomBytes(8).toString('hex').toUpperCase()}`,
     });
   }
   console.log(`\nConcluido: ${created.length} registros criados nas 14 tabelas.`);
@@ -226,7 +230,7 @@ main().catch(error => {
   console.error(`${created.length} criacoes confirmadas; ${reusedAccounts} contas de demonstracao atualizadas.`);
   console.error('A carga usa insercoes individuais, sem transacao global. Registros parciais foram mantidos.');
   console.error('Em caso de perda de conexao, a ultima insercao pode ter sido gravada. Confira antes de repetir.');
-  console.error(`Identifique este conjunto por: ${batch}. Reexecutar cria outro conjunto.`);
+  console.error('Confira os modelos e IDs impressos acima. Reexecutar adiciona cursos e dados relacionados.');
   process.exitCode = 1;
 }).finally(async () => {
   if (prisma) {
