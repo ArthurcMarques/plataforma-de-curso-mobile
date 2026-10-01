@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Plataforma de cursos",
+      "Group": "Docker",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "plataforma_cursos",
+      "Username": "plataforma",
+      "SSLMode": "prefer"
+    }
+  }
+}

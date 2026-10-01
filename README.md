@@ -114,6 +114,39 @@ Confira tambem [o roteiro de validacao do frontend](frontend/VALIDACAO.md).
 
 ## Operacao
 
+### Banco pelo navegador (pgAdmin)
+
+Acrescente ao `.env` existente (nao sobrescreva as senhas atuais):
+
+```dotenv
+PGADMIN_EMAIL=admin@example.com
+PGADMIN_PASSWORD=escolhaUmaSenhaParaOPainel
+PGADMIN_PORT=5050
+```
+
+Execute na raiz:
+
+```powershell
+docker compose up -d pgadmin
+```
+
+Abra http://localhost:5050 e entre com `PGADMIN_EMAIL` e `PGADMIN_PASSWORD`.
+O servidor **Docker > Plataforma de cursos** ja estara cadastrado no primeiro
+inicio. Ao conecta-lo, informe a senha `POSTGRES_PASSWORD` do `.env`.
+A senha do painel e a senha do banco sao credenciais separadas.
+
+Expanda **Databases > plataforma_cursos > Schemas > public > Tables**.
+Clique com o botao direito na tabela desejada, por exemplo `Usuario`, e
+selecione **View/Edit Data > All Rows** para conferir os registros.
+
+O pgAdmin conecta a `postgres:5432` pela rede Docker; o banco continua sem
+porta publicada no host. As configuracoes do painel persistem no volume
+`pgadmin_data`. Depois do primeiro inicio, mudar as variaveis de login no
+`.env` nao altera a conta existente: altere a senha pelo proprio pgAdmin.
+
+Configuracao baseada na [documentacao oficial de containers do pgAdmin](https://www.pgadmin.org/docs/pgadmin4/9.17/container_deployment.html).
+O servico foi preparado, mas nao foi iniciado nem testado em runtime.
+
 ```powershell
 # Parar preservando o banco
 docker compose down
