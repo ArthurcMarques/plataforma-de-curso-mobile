@@ -189,16 +189,18 @@ Os scripts compartilhados ficam em [`scripts/`](scripts/README.md):
 - `promover-admin.sql`: promove uma conta existente pelo email, via psql.
 - `testar-permissoes.mjs`: confere perfis, escopos e tentativas de acesso indevido.
 
-Com a API em execucao e `ADMIN_TOKEN` configurado conforme o README dos scripts,
-execute da raiz (Node.js 20+):
+Com o container `api` em execucao e as migrations aplicadas, execute da raiz
+(Node.js 20+ no host; nenhuma dependencia adicional):
 
 ```powershell
 node scripts/popular-banco.mjs
 ```
 
-Os logins de demonstracao aparecem no terminal. Cada execucao adiciona um
-novo conjunto; nao e necessario limpar o banco antes. Consulte o README dos
-scripts para porta alternativa, execucao pelo container e comportamento em falhas.
+A carga insere diretamente no PostgreSQL pelo Prisma do container, sem login,
+token ou chamadas HTTP. Os logins de demonstracao aparecem no terminal. Cada
+execucao adiciona um novo conjunto; nao e necessario limpar o banco antes.
+Consulte o README dos scripts para execucao sem Node no host e comportamento em
+falhas. Apenas os scripts de testes da API continuam exigindo ADMIN_TOKEN.
 
 ### Banco pelo navegador (pgAdmin)
 

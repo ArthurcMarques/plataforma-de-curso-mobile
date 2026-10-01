@@ -16,7 +16,7 @@ Get-Content -Raw scripts/promover-admin.sql | docker compose exec -T postgres ps
 Confira `UPDATE 1`. O arquivo usa variaveis do psql e deve ser executado pelo
 comando acima, nao diretamente no Query Tool. Nao cria usuarios nem altera senhas.
 
-Para os scripts de carga, testes CRUD e permissoes, obtenha o token administrativo
+Somente para os testes CRUD e de permissoes, obtenha o token administrativo
 no PowerShell (ajuste a URL se mudou a porta):
 
 ```powershell
@@ -43,28 +43,31 @@ Nenhum destes testes foi executado durante a implementacao.
 
 ## Popular o banco
 
-Requer Node.js 20+ no host, API em execucao, migrations aplicadas e ADMIN_TOKEN.
-Nao precisa executar `npm install` nem instalar dependencias para o script.
-Com Docker, inicie os servicos e execute:
+Insere diretamente no PostgreSQL usando Prisma, sem HTTP, login ou ADMIN_TOKEN.
+Usa DATABASE_URL e as dependencias ja instaladas na imagem do backend. O container
+`api` deve estar em execucao, com o backend compilado e as migrations aplicadas.
+O servidor HTTP nao e usado pela carga; o container fornece apenas o Node e o Prisma.
+Nao precisa existir nenhum usuario ou administrador antes da carga.
+
+Na raiz do projeto, execute (na primeira vez ou apos atualizar o backend):
 
 ```powershell
-docker compose up -d
+docker compose up --build -d
 node scripts/popular-banco.mjs
 ```
 
-Caso tenha alterado `API_PORT`, passe a URL explicitamente (o script nao le `.env`):
+O comando Node no host apenas encaminha o arquivo atual ao container via Docker.
+Nao e preciso executar `npm install` no host, nem reconstruir a imagem quando
+somente este script mudar. API_PORT nao afeta a carga e URLs de API nao sao aceitas.
+Sem Node instalado no host, use este comando equivalente no PowerShell:
 
 ```powershell
-node scripts/popular-banco.mjs http://localhost:3001
+Get-Content -Raw -Encoding utf8 scripts/popular-banco.mjs | docker compose exec -T api node --input-type=module - --database-worker
 ```
 
-Sem Node instalado no host, use o Node do container da API, a partir da raiz:
-
-```powershell
-Get-Content -Raw scripts/popular-banco.mjs | docker compose exec -T -e "ADMIN_TOKEN=$env:ADMIN_TOKEN" api node --input-type=module
-```
-
-A carga usa a API NestJS, que gera os hashes das senhas e os IDs. Cria:
+A carga usa Prisma para gerar os IDs e bcrypt para gerar os hashes das senhas.
+Os perfis sao gravados diretamente no banco, sem alterar as permissoes das rotas
+da aplicacao. Cria:
 
 - 10 alunos, 3 instrutores e 2 novos administradores (15 contas novas).
 - 4 cursos: HTML e CSS, JavaScript, React e NestJS, distribuidos entre os instrutores.
@@ -81,16 +84,15 @@ quiz sao exemplos ficticios, sem material didatico hospedado. As transacoes
 financeiras tambem sao ficticias, sem cobranca real.
 
 O terminal mostra o email e uma senha aleatoria individual de cada conta,
-seguido de uma tabela com os perfis ao terminar. Os instrutores e os dois novos
-administradores sao promovidos usando ADMIN_TOKEN. O administrador usado para
-executar o script nao entra na contagem de contas criadas e nao e alterado.
+seguido de uma tabela com os perfis ao terminar. As contas ja sao inseridas
+com seus perfis de aluno, instrutor ou administrador e podem ser usadas no login.
 Cada execucao adiciona um conjunto novo, identificado por UUID nos nomes e
 emails. Nao e idempotente: repetir adiciona dados. Nao apaga nem altera dados
 preexistentes, nao presume IDs fixos e nao executa o script de limpeza.
 
 Se houver falha, o processo retorna codigo 1 e mantem os registros parciais.
-Nao existe transacao global entre requisicoes HTTP. Confira as rotas/IDs
-impressos e o UUID do conjunto antes de repetir; em timeout, a ultima operacao
+Nao existe transacao global entre as insercoes. Confira os modelos/IDs
+impressos e o UUID do conjunto antes de repetir; em falha de conexao, a ultima operacao
 pode ter sido persistida mesmo sem resposta. Sucesso retorna codigo 0.
 
 O script foi preparado sem executar a carga no banco. Para conferir sintaxe

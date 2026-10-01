@@ -1,60 +1,78 @@
-// Node.js 20+. Execute na raiz: node scripts/popular-banco.mjs [URL_DA_API]
-// Adiciona um conjunto independente por execucao. Nao limpa dados existentes.
+// Carga direta no PostgreSQL via Prisma. Nao usa HTTP, login ou token.
+// Na raiz: node scripts/popular-banco.mjs
 import { randomUUID, randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 const argument = process.argv[2];
 if (argument === '--help' || argument === '-h') {
-  console.log('Uso: node scripts/popular-banco.mjs [http://localhost:3000]');
-  console.log('Cria dados de demonstracao nas 14 tabelas pela API. Cada execucao adiciona um novo conjunto.');
-  console.log('Cria 4 cursos (3 modulos e 9 aulas cada), 10 alunos, 3 instrutores e 2 novos administradores.');
-  console.log('Requer API, migrations e ADMIN_TOKEN de administrador. Nao executa limpeza.');
+  console.log('Uso: node scripts/popular-banco.mjs');
+  console.log('Insere diretamente no PostgreSQL: 4 cursos, 10 alunos, 3 instrutores e 2 administradores.');
+  console.log('Requer Docker, container api em execucao e migrations aplicadas. Nao exige login nem token.');
+  console.log('Cada execucao adiciona um novo conjunto. Nao limpa dados existentes.');
   process.exit(0);
 }
-const baseUrl = new URL(argument ?? 'http://localhost:3000');
-if (!['http:', 'https:'].includes(baseUrl.protocol) || baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash) {
-  throw new Error('Informe uma URL HTTP(S) da API sem credenciais, query ou fragmento.');
+if (argument !== undefined && argument !== '--database-worker') {
+  console.error('Este script nao recebe URL de API. Use: node scripts/popular-banco.mjs');
+  process.exit(1);
 }
-const base = baseUrl.href.replace(/\/$/, '');
+// O host apenas encaminha este arquivo ao Node do container, sem instalar dependencias.
+if (argument !== '--database-worker') {
+  const result = spawnSync('docker', [
+    'compose', 'exec', '-T', 'api', 'node', '--input-type=module', '-', '--database-worker',
+  ], {
+    cwd: fileURLToPath(new URL('..', import.meta.url)),
+    input: readFileSync(fileURLToPath(import.meta.url)),
+    stdio: ['pipe', 'inherit', 'inherit'],
+  });
+  if (result.error) console.error(`Nao foi possivel executar o Docker: ${result.error.message}`);
+  process.exit(result.status ?? 1);
+}
+
 const batch = randomUUID();
 const label = `Demo ${batch}`;
 const now = new Date().toISOString();
 const later = new Date(Date.now() + 30 * 86400000).toISOString();
 const created = [];
-let token;
+let prisma;
+let bcrypt;
+const models = {
+  usuario: 'usuario', categoria: 'categoria', curso: 'curso', modulo: 'modulo',
+  aula: 'aula', matricula: 'matricula', 'progresso-aula': 'progressoAula',
+  avaliacao: 'avaliacao', trilha: 'trilha', 'trilha-curso': 'trilhaCurso',
+  certificado: 'certificado', plano: 'plano', assinatura: 'assinatura', pagamento: 'pagamento',
+};
 
-async function request(method, path, body) {
-  let response;
-  try {
-    response = await fetch(`${base}${path}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(15000),
-    });
-  } catch {
-    throw new Error(`${method} ${path}: conexao indisponivel ou timeout. Confira a API.`);
-  }
-  const bodyText = await response.text();
-  let result;
-  try { result = JSON.parse(bodyText); } catch { result = bodyText; }
-  if (!response.ok) {
-    const message = result?.message;
-    throw new Error(`${method} ${path}: HTTP ${response.status}${message ? ` - ${[].concat(message).join('; ')}` : ''}`);
-  }
-  return result;
+// Converte os campos das fixtures nos nomes reais das colunas Prisma.
+async function databaseData(resource, body) {
+  if (resource === 'usuario') return {
+    NomeCompleto: body.name, Email: body.email,
+    SenhaHash: await bcrypt.hash(body.password, 10), Perfil: body.perfil,
+  };
+  return Object.fromEntries(Object.entries(body).map(([field, value]) => {
+    const column = field === 'urlConteudo' ? 'URL_Conteudo'
+      : field === 'idTransacaoGateway' ? 'Id_Transacao_Gateway'
+      : field.startsWith('id') ? `ID_${field.slice(2)}`
+      : field[0].toUpperCase() + field.slice(1);
+    return [column, field.startsWith('data') && value != null ? new Date(value) : value];
+  }));
 }
 
-async function create(route, keys, body) {
-  const row = await request('POST', `/${route}`, body);
+async function create(resource, keys, body) {
+  const model = models[resource];
+  if (!model) throw new Error(`Modelo desconhecido: ${resource}`);
+  const row = await prisma[model].create({
+    data: await databaseData(resource, body),
+    ...(resource === 'usuario' ? { omit: { SenhaHash: true } } : {}),
+  });
   if (keys.some(key => !Number.isInteger(row?.[key]))) {
-    throw new Error(`Resposta inesperada de /${route}; confira o banco antes de repetir.`);
+    throw new Error(`Identificador inesperado em ${resource}; confira o banco antes de repetir.`);
   }
-  const path = `/${route}/${keys.map(key => row[key]).join('/')}`;
-  created.push(path);
-  console.log(`Criado: ${path}`);
+  const identifier = `${resource}: ${keys.map(key => row[key]).join('/')}`;
+  created.push(identifier);
+  console.log(`Inserido: ${identifier}`);
   return row;
 }
 
@@ -83,26 +101,26 @@ const curriculum = [
 ];
 
 async function main() {
-  console.log(`API: ${base}\nConjunto: ${batch}`);
-  await request('GET', '/');
-  if (!process.env.ADMIN_TOKEN) throw new Error('Defina ADMIN_TOKEN com um JWT de administrador antes de popular.');
-  token = process.env.ADMIN_TOKEN;
-  const admin = await request('GET', '/auth/me');
-  if (admin.perfil !== 'ADMINISTRADOR') throw new Error('A carga exige um administrador.');
+  console.log(`Carga direta no PostgreSQL. Conjunto: ${batch}`);
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL nao definida no container.');
+  const require = createRequire('/app/package.json');
+  const { PrismaClient } = require('./dist/src/generated/prisma/client.js');
+  const { PrismaPg } = require('@prisma/adapter-pg');
+  bcrypt = require('bcrypt');
+  prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+  await prisma.$connect();
+  // Confere se a migracao de perfis esta aplicada antes da primeira insercao.
+  await prisma.usuario.findFirst({ select: { Perfil: true } });
 
   const accounts = [];
   async function account(name, prefix, number, perfil) {
     const email = `${prefix}${number}.${batch}@example.com`;
     const password = randomBytes(18).toString('base64url');
     const row = await create('usuario', ['ID_Usuario'], {
-      name: `${name} (${label})`, email, password,
+      name: `${name} (${label})`, email, password, perfil,
     });
     // Imprime logo apos criar, inclusive para diagnosticar uma carga parcial.
     console.log(`Conta criada: ${email} | Senha: ${password}`);
-    if (perfil !== 'ALUNO') {
-      const promoted = await request('PATCH', `/usuario/${row.ID_Usuario}/perfil`, { perfil });
-      if (promoted.Perfil !== perfil) throw new Error(`Perfil incorreto para ${email}.`);
-    }
     accounts.push({ perfil, email, password });
     return row;
   }
@@ -198,8 +216,13 @@ async function main() {
 main().catch(error => {
   console.error(`\nCarga interrompida: ${error.message}`);
   console.error(`${created.length} criacoes confirmadas. Os registros anteriores nao foram alterados.`);
-  console.error('A carga usa requisicoes separadas, sem transacao global. Registros parciais foram mantidos.');
-  console.error('Em caso de timeout, a ultima requisicao pode ter sido gravada. Confira antes de repetir.');
+  console.error('A carga usa insercoes individuais, sem transacao global. Registros parciais foram mantidos.');
+  console.error('Em caso de perda de conexao, a ultima insercao pode ter sido gravada. Confira antes de repetir.');
   console.error(`Identifique este conjunto por: ${batch}. Reexecutar cria outro conjunto.`);
   process.exitCode = 1;
+}).finally(async () => {
+  if (prisma) {
+    try { await prisma.$disconnect(); }
+    catch { console.error('Nao foi possivel encerrar a conexao com o banco.'); process.exitCode = 1; }
+  }
 });
