@@ -69,7 +69,7 @@ A carga usa Prisma para gerar os IDs e bcrypt para gerar os hashes das senhas.
 Os perfis sao gravados diretamente no banco, sem alterar as permissoes das rotas
 da aplicacao. Cria:
 
-- 10 alunos, 3 instrutores e 2 novos administradores (15 contas novas).
+- 10 alunos, 3 instrutores e 2 administradores (15 contas de demonstracao).
 - 4 cursos: HTML e CSS, JavaScript, React e NestJS, distribuidos entre os instrutores.
 - 3 modulos por curso, com 3 aulas por modulo: video (20 min), texto (25 min)
   e quiz (15 min). Cada curso tem 9 aulas e 3 horas: 12 modulos e 36 aulas no total.
@@ -77,18 +77,27 @@ da aplicacao. Cria:
 - 14 certificados, somente para as matriculas com todas as aulas concluidas.
 - Categoria, trilha com os quatro cursos, plano, 10 assinaturas e 10 pagamentos.
 
-Sao 431 registros nas 14 tabelas por execucao completa. Cada curso tem alunos
+Na primeira execucao, sao 431 registros nas 14 tabelas. Nas seguintes, sao
+416 registros novos quando as 15 contas ja existem. Cada curso tem alunos
 com progresso completo, de um modulo ou de dois modulos. "Cursos completos"
 significa estrutura preenchida de modulos e aulas; os links de video, texto e
 quiz sao exemplos ficticios, sem material didatico hospedado. As transacoes
 financeiras tambem sao ficticias, sem cobranca real.
 
-O terminal mostra o email e uma senha aleatoria individual de cada conta,
-seguido de uma tabela com os perfis ao terminar. As contas ja sao inseridas
-com seus perfis de aluno, instrutor ou administrador e podem ser usadas no login.
-Cada execucao adiciona um conjunto novo, identificado por UUID nos nomes e
-emails. Nao e idempotente: repetir adiciona dados. Nao apaga nem altera dados
-preexistentes, nao presume IDs fixos e nao executa o script de limpeza.
+Todas as contas de demonstracao usam a senha **123456**, armazenada como hash bcrypt:
+
+- `aluno1@example.com` ate `aluno10@example.com`.
+- `instrutor1@example.com` ate `instrutor3@example.com`.
+- `admin1@example.com` e `admin2@example.com`.
+
+O terminal mostra os logins e perfis ao terminar. Se um desses emails ja existir,
+a carga reutiliza o ID e atualiza nome, perfil e senha para os valores de
+demonstracao. Nao modifica outras contas. Contas antigas com UUID no email nao
+sao renomeadas nem removidas automaticamente.
+
+Cada execucao adiciona novos cursos e dados relacionados, identificados pelo
+UUID do conjunto. Portanto, a carga completa nao e idempotente, embora os
+usuarios sejam reutilizados. Nao presume IDs fixos nem executa limpeza.
 
 Se houver falha, o processo retorna codigo 1 e mantem os registros parciais.
 Nao existe transacao global entre as insercoes. Confira os modelos/IDs

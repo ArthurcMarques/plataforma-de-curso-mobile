@@ -1,6 +1,6 @@
 // Carga direta no PostgreSQL via Prisma. Nao usa HTTP, login ou token.
 // Na raiz: node scripts/popular-banco.mjs
-import { randomUUID, randomBytes } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -11,7 +11,7 @@ if (argument === '--help' || argument === '-h') {
   console.log('Uso: node scripts/popular-banco.mjs');
   console.log('Insere diretamente no PostgreSQL: 4 cursos, 10 alunos, 3 instrutores e 2 administradores.');
   console.log('Requer Docker, container api em execucao e migrations aplicadas. Nao exige login nem token.');
-  console.log('Cada execucao adiciona um novo conjunto. Nao limpa dados existentes.');
+  console.log('Reutiliza 15 emails de demonstracao com senha 123456. Cursos e dados relacionados sao adicionados.');
   process.exit(0);
 }
 if (argument !== undefined && argument !== '--database-worker') {
@@ -36,6 +36,7 @@ const label = `Demo ${batch}`;
 const now = new Date().toISOString();
 const later = new Date(Date.now() + 30 * 86400000).toISOString();
 const created = [];
+let reusedAccounts = 0;
 let prisma;
 let bcrypt;
 const models = {
@@ -114,13 +115,19 @@ async function main() {
 
   const accounts = [];
   async function account(name, prefix, number, perfil) {
-    const email = `${prefix}${number}.${batch}@example.com`;
-    const password = randomBytes(18).toString('base64url');
-    const row = await create('usuario', ['ID_Usuario'], {
-      name: `${name} (${label})`, email, password, perfil,
+    const email = `${prefix}${number}@example.com`;
+    const password = '123456';
+    const existing = await prisma.usuario.findUnique({ where: { Email: email }, select: { ID_Usuario: true } });
+    const data = await databaseData('usuario', { name, email, password, perfil });
+    const row = await prisma.usuario.upsert({
+      where: { Email: email }, create: data,
+      update: { NomeCompleto: data.NomeCompleto, SenhaHash: data.SenhaHash, Perfil: perfil },
+      omit: { SenhaHash: true },
     });
+    if (existing) reusedAccounts++;
+    else created.push(`usuario: ${row.ID_Usuario}`);
     // Imprime logo apos criar, inclusive para diagnosticar uma carga parcial.
-    console.log(`Conta criada: ${email} | Senha: ${password}`);
+    console.log(`Conta ${existing ? 'atualizada' : 'criada'}: ${email} | Senha: ${password}`);
     accounts.push({ perfil, email, password });
     return row;
   }
@@ -207,7 +214,8 @@ async function main() {
     });
   }
   console.log(`\nConcluido: ${created.length} registros criados nas 14 tabelas.`);
-  console.log(`${courses.length} cursos completos, ${students.length} alunos, ${instructors.length} instrutores e ${administrators.length} novos administradores.`);
+  console.log(`${courses.length} cursos completos, ${students.length} alunos, ${instructors.length} instrutores e ${administrators.length} administradores de demonstracao.`);
+  console.log(`${reusedAccounts} contas existentes reutilizadas com senha 123456.`);
   console.table(accounts);
   console.log('Cada curso tem 3 modulos, 9 aulas e 3 horas. Links de conteudo e pagamentos sao ficticios.');
   console.log('Os dados foram mantidos no banco. Atualize o frontend ou consulte pelo pgAdmin.');
@@ -215,7 +223,7 @@ async function main() {
 
 main().catch(error => {
   console.error(`\nCarga interrompida: ${error.message}`);
-  console.error(`${created.length} criacoes confirmadas. Os registros anteriores nao foram alterados.`);
+  console.error(`${created.length} criacoes confirmadas; ${reusedAccounts} contas de demonstracao atualizadas.`);
   console.error('A carga usa insercoes individuais, sem transacao global. Registros parciais foram mantidos.');
   console.error('Em caso de perda de conexao, a ultima insercao pode ter sido gravada. Confira antes de repetir.');
   console.error(`Identifique este conjunto por: ${batch}. Reexecutar cria outro conjunto.`);

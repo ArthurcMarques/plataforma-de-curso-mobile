@@ -183,7 +183,7 @@ Confira tambem [o roteiro de validacao do frontend](frontend/VALIDACAO.md).
 Os scripts compartilhados ficam em [`scripts/`](scripts/README.md):
 
 - `popular-banco.mjs`: adiciona 4 cursos com modulos/aulas, 10 alunos,
-  3 instrutores, 2 novos administradores e dados relacionados nas 14 tabelas.
+  3 instrutores, 2 administradores de demonstracao e dados relacionados nas 14 tabelas.
 - `testar-endpoints.mjs`: verifica os endpoints e tenta remover os dados de teste.
 - `limpar-dados.sql`: apaga todos os registros das tabelas da aplicacao.
 - `promover-admin.sql`: promove uma conta existente pelo email, via psql.
@@ -198,7 +198,8 @@ node scripts/popular-banco.mjs
 
 A carga insere diretamente no PostgreSQL pelo Prisma do container, sem login,
 token ou chamadas HTTP. Os logins de demonstracao aparecem no terminal. Cada
-execucao adiciona um novo conjunto; nao e necessario limpar o banco antes.
+execucao adiciona novos cursos e dados relacionados, reutilizando as 15 contas
+de demonstracao com emails fixos e senha `123456`; nao e necessario limpar o banco antes.
 Consulte o README dos scripts para execucao sem Node no host e comportamento em
 falhas. Apenas os scripts de testes da API continuam exigindo ADMIN_TOKEN.
 
