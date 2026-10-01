@@ -23,3 +23,21 @@ export const sections: SectionItem[] = [
     { id: "assinaturas", name: "Assinaturas", path: "/assinaturas", group: "Financeiro" },
     { id: "pagamentos", name: "Pagamentos", path: "/pagamentos", group: "Financeiro" }
 ];
+
+export function sectionsForProfile(perfil: "ALUNO" | "INSTRUTOR" | "ADMINISTRADOR"): SectionItem[] {
+    const account: SectionItem = { id: "minha-conta", name: "Minha conta", path: "/minha-conta", group: "Usuário" };
+    if (perfil === "ALUNO") return [
+        { id: "dashboard", name: "Área do aluno", path: "/aluno", group: "principal" },
+        { id: "cursos", name: "Catálogo de cursos", path: "/aluno", group: "Acadêmico" },
+        { id: "matriculas", name: "Meus cursos e progresso", path: "/minhas-matriculas", group: "Acadêmico" },
+        { id: "certificados", name: "Meus certificados", path: "/meus-certificados", group: "Acadêmico" },
+        { id: "avaliacoes", name: "Minhas avaliações", path: "/avaliacoes", group: "Acadêmico" }, account
+    ];
+    if (perfil === "INSTRUTOR") return [
+        { id: "dashboard", name: "Minhas turmas", path: "/instrutor", group: "principal" },
+        ...sections.filter(section => ["cursos", "modulos", "aulas"].includes(section.id)).map(section => ({
+            ...section, name: section.id === "cursos" ? "Meus cursos" : section.name
+        })), account
+    ];
+    return sections.map(section => section.id === "dashboard" ? { ...section, name: "Administração", path: "/administrador" } : section).concat(account);
+}

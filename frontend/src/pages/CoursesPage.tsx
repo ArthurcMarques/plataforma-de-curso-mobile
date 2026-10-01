@@ -6,8 +6,12 @@ import type { Curso } from "../models/types";
 import { todayISO } from "../utils";
 import type { PageProps } from "./pageTypes";
 import { ActionButton, courseSummary, SimpleTable } from "./shared";
+import { useSession } from "../auth/session";
 
 export function CoursesPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
+    const [saving, setSaving] = useState(false);
+    const user = useSession();
+    const isInstructor = user.perfil === "INSTRUTOR";
     const instructors = data.usuarios.filter(user => user.perfil === "INSTRUTOR");
     const rows = data.cursos.map((course) => courseSummary(data, course));
     const [titulo, setTitulo] = useState("");
@@ -30,32 +34,36 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
 
     async function saveCourse(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        // Curso depende de categoria e instrutor ja cadastrados.
+        if (saving) return;
+        setSaving(true);
+        try {
+            // Curso depende de categoria e instrutor ja cadastrados.
 
-        if (!data.categorias.length || !instructors.length) {
-            notify("Cadastre ao menos uma categoria e um instrutor antes do curso.", "danger");
-            return;
-        }
-
-        const course = {
-            titulo: titulo.trim(),
-            descricao: descricao.trim(),
-            nivel: nivel as Curso["nivel"],
-            idCategoria,
-            idInstrutor,
-            dataPublicacao
-        };
-
-        if (editingId !== null) {
-            const updated = await updateById("cursos", editingId, course);
-            if (updated) {
-                clearForm();
+            if (!data.categorias.length || !instructors.length) {
+                notify(isInstructor ? "Peça ao administrador para cadastrar uma categoria antes de criar seu curso." : "Cadastre ao menos uma categoria e um instrutor antes do curso.", "danger");
+                return;
             }
-            return;
-        }
 
-        if (!await addWithId("cursos", { ...course, totalAulas: 0, totalHoras: 0 })) return;
-        clearForm();
+            const course = {
+                titulo: titulo.trim(),
+                descricao: descricao.trim(),
+                nivel: nivel as Curso["nivel"],
+                idCategoria,
+                idInstrutor: isInstructor ? user.userId : idInstrutor,
+                dataPublicacao
+            };
+
+            if (editingId !== null) {
+                const updated = await updateById("cursos", editingId, course);
+                if (updated) {
+                    clearForm();
+                }
+                return;
+            }
+
+            if (!await addWithId("cursos", { ...course, totalAulas: 0, totalHoras: 0 })) return;
+            clearForm();
+        } finally { setSaving(false); }
     }
 
     function editCourse(course: Curso) {
@@ -72,10 +80,12 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
 
     return (
         <>
-            <PageHeader title="Cursos" description="Cadastre cursos e vincule categoria e instrutor." />
+            <PageHeader title={isInstructor ? "Meus cursos" : "Cursos"} description={isInstructor ? "Crie e organize os cursos sob sua responsabilidade." : "Gerencie cursos, categorias e responsáveis."} />
+            {!data.categorias.length && <p className="alert alert-info">{isInstructor ? "Aguarde o cadastro de categorias pelo administrador." : "Cadastre uma categoria para começar."}</p>}
             <section className="panel">
                 {editingId !== null && <p className="edit-banner">Editando curso.</p>}
-                <form className="row g-3" onSubmit={saveCourse}>
+                <form onSubmit={saveCourse}>
+                    <fieldset className="row g-3" disabled={saving || !data.categorias.length || !instructors.length}>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Titulo</label>
                         <input className="form-control" value={titulo} required onChange={(event) => setTitulo(event.target.value)} />
@@ -98,10 +108,10 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Instrutor</label>
-                        <select className="form-select" value={idInstrutor} required onChange={(event) => setIdInstrutor(event.target.value)}>
+                        {isInstructor ? <input className="form-control" value={user.name} readOnly aria-label="Instrutor responsável" /> : <select className="form-select" value={idInstrutor} required onChange={(event) => setIdInstrutor(event.target.value)}>
                             <option value="">Selecione</option>
                             {instructors.map((instructor) => <option value={instructor.id} key={instructor.id}>{instructor.nomeCompleto}</option>)}
-                        </select>
+                        </select>}
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Data de publicacao</label>
@@ -115,6 +125,7 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
                         <button className="btn btn-primary" type="submit">{editingId !== null ? "Salvar alteracoes" : "Salvar"}</button>
                         <button className="btn btn-outline-secondary" type="button" onClick={clearForm}>{editingId !== null ? "Cancelar" : "Limpar"}</button>
                     </div>
+                    </fieldset>
                 </form>
             </section>
             <SimpleTable
@@ -128,9 +139,9 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
                     course.totalAulas,
                     `${course.totalHoras} h`,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
-                        <ActionButton onClick={() => editCourse(course)}>Editar</ActionButton>
-                        <ActionButton onClick={() => navigate("modulos")}>Modulos</ActionButton>
-                        <ActionButton danger onClick={() => removeById("cursos", course.id)}>Excluir</ActionButton>
+                        <ActionButton disabled={saving} onClick={() => editCourse(course)}>Editar</ActionButton>
+                        <ActionButton disabled={saving} onClick={() => navigate("modulos")}>Modulos</ActionButton>
+                        <ActionButton disabled={saving} danger onClick={() => removeById("cursos", course.id)}>Excluir</ActionButton>
                     </div>
                 ])}
             />

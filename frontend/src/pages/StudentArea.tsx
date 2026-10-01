@@ -9,9 +9,10 @@ function contentUrl(value: string) {
     catch { return undefined; }
 }
 
-export function StudentArea({ data, addDirect, removeDirect, refreshData, notify }: PageProps) {
+export function StudentArea({ data, addDirect, removeDirect, refreshData, notify, navigate, view = "catalogo" }: PageProps & { view?: "catalogo" | "matriculas" | "certificados" }) {
     const user = useSession();
     const [busy, setBusy] = useState(false);
+    const courses = view === "matriculas" ? data.cursos.filter(course => data.matriculas.some(item => sameId(item.idCurso, course.id))) : data.cursos;
     async function enroll(idCurso: number | string) {
         setBusy(true);
         try {
@@ -30,15 +31,17 @@ export function StudentArea({ data, addDirect, removeDirect, refreshData, notify
         } finally { setBusy(false); }
     }
     return <>
-        <PageHeader title="Área do aluno" description={`Olá, ${user.name}. Escolha um curso e acompanhe seus estudos.`} />
+        <PageHeader title={view === "catalogo" ? "Catálogo de cursos" : view === "matriculas" ? "Meus cursos e progresso" : "Meus certificados"}
+            description={view === "catalogo" ? `Olá, ${user.name}. Escolha um curso para começar.` : view === "matriculas" ? "Abra as aulas e marque o que você já concluiu." : "Consulte os certificados emitidos para você."} />
         <section className="panel d-flex gap-4 flex-wrap">
             <span><strong>{data.matriculas.length}</strong> matrículas</span>
             <span><strong>{data.progressoAulas.length}</strong> aulas concluídas</span>
             <span><strong>{data.certificados.length}</strong> certificados</span>
         </section>
-        <h2 className="h4">Cursos e minhas matrículas</h2>
-        {data.cursos.length === 0 && <p className="panel">Nenhum curso disponível.</p>}
-        {data.cursos.map(course => {
+        {view !== "certificados" && <>
+        {courses.length === 0 && <section className="panel"><p>{view === "matriculas" ? "Você ainda não está matriculado em nenhum curso." : "Nenhum curso disponível."}</p>
+            {view === "matriculas" && <button className="btn btn-primary" onClick={() => navigate("cursos")}>Explorar cursos</button>}</section>}
+        {courses.map(course => {
             const enrolled = data.matriculas.some(item => sameId(item.idCurso, course.id));
             const modules = data.modulos.filter(item => sameId(item.idCurso, course.id)).sort((a, b) => a.ordem - b.ordem);
             return <article className="panel" key={course.id}>
@@ -47,6 +50,8 @@ export function StudentArea({ data, addDirect, removeDirect, refreshData, notify
                 <p className="text-muted">{course.nivel}</p>
                 {!enrolled ? <button className="btn btn-primary" disabled={busy} onClick={() => void enroll(course.id)}>Matricular-me</button> : <>
                     <span className="badge text-bg-success mb-3">Matriculado</span>
+                    {view === "catalogo" && <div><button className="btn btn-outline-primary" onClick={() => navigate("matriculas")}>Continuar meus estudos</button></div>}
+                    {view === "matriculas" && <>
                     {modules.length === 0 && <p>O instrutor ainda não publicou aulas.</p>}
                     {modules.map(module => <section key={module.id} className="mb-3">
                         <h4 className="h6">{module.ordem}. {module.titulo}</h4>
@@ -60,14 +65,17 @@ export function StudentArea({ data, addDirect, removeDirect, refreshData, notify
                             </div>;
                         })}
                     </section>)}
+                    </>}
                 </>}
             </article>;
         })}
-        <h2 className="h4">Meus certificados</h2>
+        </>}
+        {view === "certificados" && <>
         <section className="panel">
             {data.certificados.length === 0 ? <p className="mb-0">Nenhum certificado emitido.</p> : data.certificados.map(item => <p key={item.id}>
                 {data.cursos.find(course => sameId(course.id, item.idCurso))?.titulo} · {item.codigoVerificacao} · {item.dataEmissao}
             </p>)}
         </section>
+        </>}
     </>;
 }

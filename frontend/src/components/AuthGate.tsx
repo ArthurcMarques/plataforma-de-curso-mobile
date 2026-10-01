@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { AUTH_EVENT, getToken, getSession, login, logout, register } from "../services/api";
-import { SessionContext, profileNames } from "../auth/session";
+import { SessionContext, profileNames, PROFILE_UPDATED } from "../auth/session";
 import type { SessionUser } from "../auth/session";
 
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -38,6 +38,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
         });
         return () => { cancelled = true; };
     }, [token, retry]);
+
+    useEffect(() => {
+        if (!token) return;
+        let active = true;
+        const refresh = () => {
+            void getSession().then(current => { if (active) setUser(current); }).catch(() => {
+                // Uma resposta 401 ja encerra a sessao na camada HTTP.
+            });
+        };
+        window.addEventListener("focus", refresh);
+        window.addEventListener(PROFILE_UPDATED, refresh);
+        return () => {
+            active = false;
+            window.removeEventListener("focus", refresh);
+            window.removeEventListener(PROFILE_UPDATED, refresh);
+        };
+    }, [token]);
 
     async function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();

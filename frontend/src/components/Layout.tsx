@@ -10,6 +10,7 @@ interface LayoutProps {
 }
 
 export function Layout({ sections, currentPath, onNavigate, children }: LayoutProps) {
+    const home = sections.find(section => section.id === "dashboard")!;
     // Agrupa as secoes para montar os dropdowns do menu.
     const grouped = sections.reduce<Record<string, SectionItem[]>>((groups, section) => {
         if (section.group === "principal") {
@@ -23,7 +24,7 @@ export function Layout({ sections, currentPath, onNavigate, children }: LayoutPr
         <>
             <nav className="navbar navbar-expand-lg app-nav">
                 <div className="container py-2">
-                    <button className="navbar-brand fw-semibold btn btn-link text-decoration-none p-0" type="button" onClick={() => onNavigate("/")}>
+                    <button className="navbar-brand fw-semibold btn btn-link text-decoration-none p-0" type="button" onClick={() => onNavigate(home.path)}>
                         Plataforma de Cursos
                     </button>
                     <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarReact" aria-controls="navbarReact" aria-expanded="false" aria-label="Alternar navegação">
@@ -32,8 +33,8 @@ export function Layout({ sections, currentPath, onNavigate, children }: LayoutPr
                     <div className="collapse navbar-collapse" id="navbarReact">
                         <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2 mt-3 mt-lg-0">
                             <li className="nav-item">
-                                <button className={`nav-link btn btn-link ${currentPath === "/" ? "active fw-semibold" : ""}`} type="button" onClick={() => onNavigate("/")}>
-                                    Início
+                                <button className={`nav-link btn btn-link ${currentPath === home.path ? "active fw-semibold" : ""}`} type="button" onClick={() => onNavigate(home.path)}>
+                                    {home.name}
                                 </button>
                             </li>
                             {Object.entries(grouped).map(([groupName, items]) => (

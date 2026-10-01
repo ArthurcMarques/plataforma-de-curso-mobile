@@ -2,12 +2,18 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { PageHeader } from "../components/PageHeader";
-import { nameById, todayISO } from "../utils";
+import { nameById, sameId, todayISO } from "../utils";
+import { useSession } from "../auth/session";
 import type { PageProps } from "./pageTypes";
 import { ActionButton, SimpleTable } from "./shared";
 
-export function ReviewsPage({ data, addWithId, updateById, removeById, navigate }: PageProps) {
-    const rows = data.avaliacoes.map((item) => ({
+export function ReviewsPage({ data, addWithId, updateById, removeById, navigate, notify }: PageProps) {
+    const [saving, setSaving] = useState(false);
+    const user = useSession();
+    const isStudent = user.perfil === "ALUNO";
+    const courses = isStudent ? data.cursos.filter(course => data.matriculas.some(item => sameId(item.idCurso, course.id))) : data.cursos;
+    const reviews = isStudent ? data.avaliacoes.filter(item => sameId(item.idUsuario, user.userId)) : data.avaliacoes;
+    const rows = reviews.map((item) => ({
         ...item,
         usuarioNome: nameById(data.usuarios, item.idUsuario, "nomeCompleto"),
         cursoNome: nameById(data.cursos, item.idCurso, "titulo")
@@ -30,25 +36,32 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate 
 
     async function saveReview(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        // Monta a avaliacao usando os ids selecionados nos selects.
-        const review = {
-            idUsuario,
-            idCurso,
-            nota: Number(nota),
-            comentario: comentario.trim(),
-            dataAvaliacao
-        };
-
-        if (editingId !== null) {
-            const updated = await updateById("avaliacoes", editingId, review);
-            if (updated) {
-                clearForm();
+        if (saving) return;
+        setSaving(true);
+        try {
+            if (!courses.some(course => sameId(course.id, idCurso))) {
+                notify(isStudent ? "Selecione um curso em que você está matriculado." : "Selecione um curso válido.", "danger"); return;
             }
-            return;
-        }
+            // Monta a avaliacao usando os ids selecionados nos selects.
+            const review = {
+                idUsuario: isStudent ? user.userId : idUsuario,
+                idCurso,
+                nota: Number(nota),
+                comentario: comentario.trim(),
+                dataAvaliacao
+            };
 
-        if (!await addWithId("avaliacoes", review)) return;
-        clearForm();
+            if (editingId !== null) {
+                const updated = await updateById("avaliacoes", editingId, review);
+                if (updated) {
+                    clearForm();
+                }
+                return;
+            }
+
+            if (!await addWithId("avaliacoes", review)) return;
+            clearForm();
+        } finally { setSaving(false); }
     }
 
     function editReview(review: any) {
@@ -63,22 +76,24 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate 
 
     return (
         <>
-            <PageHeader title="Avaliacoes" description="Registre avaliacoes de usuarios para os cursos." />
+            <PageHeader title={isStudent ? "Minhas avaliações" : "Avaliações"} description={isStudent ? "Avalie os cursos em que você está matriculado." : "Gerencie as avaliações dos cursos."} />
+            {courses.length === 0 && <p className="alert alert-info">{isStudent ? "Matricule-se em um curso antes de avaliar." : "Cadastre um curso antes de registrar avaliações."}</p>}
             <section className="panel">
                 {editingId !== null && <p className="edit-banner">Editando avaliacao.</p>}
-                <form className="row g-3" onSubmit={saveReview}>
-                    <div className="col-12 col-md-6">
+                <form onSubmit={saveReview}>
+                    <fieldset className="row g-3" disabled={saving || !courses.length}>
+                    {!isStudent && <div className="col-12 col-md-6">
                         <label className="form-label">Usuario</label>
                         <select className="form-select" value={idUsuario} required onChange={(event) => setIdUsuario(event.target.value)}>
                             <option value="">Selecione</option>
                             {data.usuarios.map((user) => <option value={user.id} key={user.id}>{user.nomeCompleto}</option>)}
                         </select>
-                    </div>
+                    </div>}
                     <div className="col-12 col-md-6">
                         <label className="form-label">Curso</label>
                         <select className="form-select" value={idCurso} required onChange={(event) => setIdCurso(event.target.value)}>
                             <option value="">Selecione</option>
-                            {data.cursos.map((course) => <option value={course.id} key={course.id}>{course.titulo}</option>)}
+                            {courses.map((course) => <option value={course.id} key={course.id}>{course.titulo}</option>)}
                         </select>
                     </div>
                     <div className="col-12 col-md-6">
@@ -101,6 +116,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate 
                         <button className="btn btn-primary" type="submit">{editingId !== null ? "Salvar alteracoes" : "Salvar"}</button>
                         <button className="btn btn-outline-secondary" type="button" onClick={clearForm}>{editingId !== null ? "Cancelar" : "Limpar"}</button>
                     </div>
+                    </fieldset>
                 </form>
             </section>
             <SimpleTable
@@ -113,9 +129,9 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate 
                     review.comentario || "-",
                     review.dataAvaliacao,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
-                        <ActionButton onClick={() => editReview(review)}>Editar</ActionButton>
-                        <ActionButton onClick={() => navigate("cursos")}>Cursos</ActionButton>
-                        <ActionButton danger onClick={() => removeById("avaliacoes", review.id)}>Excluir</ActionButton>
+                        <ActionButton disabled={saving} onClick={() => editReview(review)}>Editar</ActionButton>
+                        <ActionButton disabled={saving} onClick={() => navigate("cursos")}>Cursos</ActionButton>
+                        <ActionButton disabled={saving} danger onClick={() => removeById("avaliacoes", review.id)}>Excluir</ActionButton>
                     </div>
                 ])}
             />

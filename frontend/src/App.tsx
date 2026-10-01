@@ -3,7 +3,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { AppContent } from "./components/AppContent";
 import { Layout } from "./components/Layout";
-import { sections } from "./router/routes";
+import { sectionsForProfile } from "./router/routes";
 import { AuthGate } from "./components/AuthGate";
 import { useSession } from "./auth/session";
 
@@ -15,19 +15,17 @@ function AuthenticatedApp() {
     const user = useSession();
     const location = useLocation();
     const navigate = useNavigate();
-    const visibleSections = user.perfil === "ADMINISTRADOR" ? sections : user.perfil === "INSTRUTOR"
-        ? sections.filter(section => ["dashboard", "cursos", "modulos", "aulas"].includes(section.id))
-        : sections.filter(section => section.id === "dashboard");
+    const visibleSections = sectionsForProfile(user.perfil);
 
     // As paginas internas navegam pelo id da secao, como "cursos".
     function navigateToSection(sectionId: string) {
-        const section = sections.find((item) => item.id === sectionId);
+        const section = visibleSections.find((item) => item.id === sectionId);
         navigate(section?.path ?? "/");
     }
 
     return (
         <Layout sections={visibleSections} currentPath={location.pathname} onNavigate={navigate}>
-            <AppContent navigateToSection={navigateToSection} />
+            <AppContent key={`${user.userId}:${user.perfil}`} navigateToSection={navigateToSection} />
         </Layout>
     );
 }

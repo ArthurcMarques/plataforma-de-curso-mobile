@@ -32,7 +32,7 @@ export function AdminArea({ data, refreshData, notify, navigate }: PageProps) {
             </div>
         </section>
         <h2 className="h4">Perfis de acesso</h2>
-        <p>Novas contas são alunos. Promova instrutores e administradores aqui.</p>
+        <p>Revise os perfis abaixo ou use “Gerenciar usuários” para cadastrar uma conta com o perfil desejado.</p>
         <SimpleTable columns={["Nome", "E-mail", "Perfil"]} emptyText="Nenhum usuário cadastrado."
             rows={data.usuarios.map(item => [item.nomeCompleto, item.email,
                 <select className="form-select" aria-label={`Perfil de ${item.nomeCompleto}`} value={item.perfil}

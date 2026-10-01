@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 export type Perfil = "ALUNO" | "INSTRUTOR" | "ADMINISTRADOR";
 export interface SessionUser { userId: number; name: string; email: string; perfil: Perfil }
 export const SessionContext = createContext<SessionUser | null>(null);
+export const PROFILE_UPDATED = "plataforma-cursos:profile-updated";
 export function useSession() {
     const user = useContext(SessionContext);
     if (!user) throw new Error("Sessão não carregada.");

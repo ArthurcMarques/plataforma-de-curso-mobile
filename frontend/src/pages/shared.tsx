@@ -33,8 +33,8 @@ export function money(value: number) {
 }
 
 // Botao pequeno usado nas acoes das tabelas.
-export function ActionButton({ children, danger = false, onClick }: { children: string; danger?: boolean; onClick: () => void }) {
-    return <button className={`btn btn-sm btn-${danger ? "outline-danger" : "outline-secondary"}`} type="button" onClick={onClick}>{children}</button>;
+export function ActionButton({ children, danger = false, disabled = false, onClick }: { children: string; danger?: boolean; disabled?: boolean; onClick: () => void }) {
+    return <button className={`btn btn-sm btn-${danger ? "outline-danger" : "outline-secondary"}`} type="button" disabled={disabled} onClick={onClick}>{children}</button>;
 }
 
 // Select simples reutilizado em formularios menores.

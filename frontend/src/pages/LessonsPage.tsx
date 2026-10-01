@@ -6,8 +6,11 @@ import type { Aula } from "../models/types";
 import { nameById, sameId } from "../utils";
 import type { PageProps } from "./pageTypes";
 import { ActionButton, SimpleTable } from "./shared";
+import { useSession } from "../auth/session";
 
 export function LessonsPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
+    const [saving, setSaving] = useState(false);
+    const isInstructor = useSession().perfil === "INSTRUTOR";
     const rows = data.aulas.map((lesson) => {
         const module = data.modulos.find((item) => sameId(item.id, lesson.idModulo));
         return {
@@ -36,37 +39,41 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
 
     async function saveLesson(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        // Nao permite duas aulas com a mesma ordem no mesmo modulo.
-        const moduleId = idModulo;
-        const order = Number(ordem);
-        const repeated = data.aulas.some((item) => {
-            return !sameId(item.id, editingId) && sameId(item.idModulo, moduleId) && Number(item.ordem) === order;
-        });
+        if (saving) return;
+        setSaving(true);
+        try {
+            // Nao permite duas aulas com a mesma ordem no mesmo modulo.
+            const moduleId = idModulo;
+            const order = Number(ordem);
+            const repeated = data.aulas.some((item) => {
+                return !sameId(item.id, editingId) && sameId(item.idModulo, moduleId) && Number(item.ordem) === order;
+            });
 
-        if (repeated) {
-            notify("Ja existe uma aula com essa ordem neste modulo.", "danger");
-            return;
-        }
-
-        const lesson = {
-            idModulo: moduleId,
-            titulo: titulo.trim(),
-            tipoConteudo: tipoConteudo as Aula["tipoConteudo"],
-            urlConteudo: urlConteudo.trim(),
-            duracaoMinutos: Number(duracaoMinutos),
-            ordem: order
-        };
-
-        if (editingId !== null) {
-            const updated = await updateById("aulas", editingId, lesson);
-            if (updated) {
-                clearForm();
+            if (repeated) {
+                notify("Ja existe uma aula com essa ordem neste modulo.", "danger");
+                return;
             }
-            return;
-        }
 
-        if (!await addWithId("aulas", lesson)) return;
-        clearForm();
+            const lesson = {
+                idModulo: moduleId,
+                titulo: titulo.trim(),
+                tipoConteudo: tipoConteudo as Aula["tipoConteudo"],
+                urlConteudo: urlConteudo.trim(),
+                duracaoMinutos: Number(duracaoMinutos),
+                ordem: order
+            };
+
+            if (editingId !== null) {
+                const updated = await updateById("aulas", editingId, lesson);
+                if (updated) {
+                    clearForm();
+                }
+                return;
+            }
+
+            if (!await addWithId("aulas", lesson)) return;
+            clearForm();
+        } finally { setSaving(false); }
     }
 
     function editLesson(lesson: Aula) {
@@ -83,10 +90,12 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
 
     return (
         <>
-            <PageHeader title="Aulas" description="Cadastre aulas dentro dos modulos." />
+            <PageHeader title={isInstructor ? "Aulas dos meus cursos" : "Aulas"} description={isInstructor ? "Publique e atualize as aulas dos seus módulos." : "Cadastre aulas dentro dos módulos."} />
+            {!data.modulos.length && <p className="alert alert-info">Crie um módulo antes de cadastrar aulas.</p>}
             <section className="panel">
                 {editingId !== null && <p className="edit-banner">Editando aula.</p>}
-                <form className="row g-3" onSubmit={saveLesson}>
+                <form onSubmit={saveLesson}>
+                    <fieldset className="row g-3" disabled={saving || !data.modulos.length}>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Modulo</label>
                         <select className="form-select" value={idModulo} required onChange={(event) => setIdModulo(event.target.value)}>
@@ -125,6 +134,7 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
                         <button className="btn btn-primary" type="submit">{editingId !== null ? "Salvar alteracoes" : "Salvar"}</button>
                         <button className="btn btn-outline-secondary" type="button" onClick={clearForm}>{editingId !== null ? "Cancelar" : "Limpar"}</button>
                     </div>
+                    </fieldset>
                 </form>
             </section>
             <SimpleTable
@@ -138,9 +148,9 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
                     `${lesson.duracaoMinutos} min`,
                     lesson.ordem,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
-                        <ActionButton onClick={() => editLesson(lesson)}>Editar</ActionButton>
-                        <ActionButton onClick={() => navigate("progresso")}>Progresso</ActionButton>
-                        <ActionButton danger onClick={() => removeById("aulas", lesson.id)}>Excluir</ActionButton>
+                        <ActionButton disabled={saving} onClick={() => editLesson(lesson)}>Editar</ActionButton>
+                        {isInstructor ? <ActionButton disabled={saving} onClick={() => navigate("dashboard")}>Ver turmas</ActionButton> : <ActionButton disabled={saving} onClick={() => navigate("progresso")}>Progresso</ActionButton>}
+                        <ActionButton disabled={saving} danger onClick={() => removeById("aulas", lesson.id)}>Excluir</ActionButton>
                     </div>
                 ])}
             />
