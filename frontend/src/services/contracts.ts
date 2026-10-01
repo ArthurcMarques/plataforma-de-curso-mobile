@@ -2,7 +2,7 @@ import type { CollectionName, RecordId } from "../models/types";
 type Row = Record<string, any>;
 type Contract = { route: string; keys: string[]; fields: string[] };
 export const contracts: Record<CollectionName, Contract> = {
-    usuarios: { route: "usuario", keys: ["ID_Usuario"], fields: ["nomeCompleto", "email", "dataCadastro"] },
+    usuarios: { route: "usuario", keys: ["ID_Usuario"], fields: ["nomeCompleto", "email", "dataCadastro", "perfil"] },
     categorias: { route: "categoria", keys: ["ID_Categoria"], fields: ["nome", "descricao"] },
     cursos: { route: "curso", keys: ["ID_Curso"], fields: ["titulo", "descricao", "idInstrutor", "idCategoria", "nivel", "dataPublicacao", "totalAulas", "totalHoras"] },
     modulos: { route: "modulo", keys: ["ID_Modulo"], fields: ["idCurso", "titulo", "ordem"] },

@@ -13,7 +13,10 @@ node --experimental-strip-types --test tests/contracts.test.mjs
    e o bundle. Na raiz, execute `docker compose up --build -d`.
 2. Abra http://localhost:8080, crie uma conta, entre e recarregue a pagina.
    A sessao deve permanecer na mesma aba; sair deve retornar ao login.
-3. Cadastre categoria e usuario; crie curso selecionando esse usuario como
+   O cadastro abre a area de aluno. Promova uma conta seguindo o README da
+   raiz e entre como administrador para executar os cadastros dos passos seguintes.
+3. Cadastre categoria e usuario; promova esse usuario para INSTRUTOR na pagina
+   inicial administrativa. Crie curso selecionando esse usuario como
    instrutor. Edite titulo, categoria e nivel; recarregue para conferir.
 4. Crie modulo e aulas dos tipos Video, Texto e Quiz. Verifique os enums
    exibidos e a persistencia da URL e duracao.
@@ -36,6 +39,14 @@ node --experimental-strip-types --test tests/contracts.test.mjs
     e recarregue: a resposta 401 deve retornar ao login. Confira tambem uma
     senha incorreta e a tentativa de acesso com a API parada.
 
+12. Entre como aluno: confira redirecionamento para `/aluno`, matricula propria,
+    abertura de conteudos e progresso. Acesse `/usuarios` manualmente: deve
+    retornar a `/aluno`. Confira que outro aluno nao ve seu progresso.
+13. Entre como instrutor: confira `/instrutor`, cursos proprios, criacao de
+    modulos/aulas e turmas. Outro instrutor nao deve conseguir editar seus cursos.
+14. Como administrador, altere um instrutor para aluno; uma nova chamada da API
+    com o token antigo deve perder a permissao. Recarregue a aba para atualizar
+    a area visual. Confira os testes automatizados em `scripts/testar-permissoes.mjs`.
+
 Datas sem horario sao enviadas como meia-noite UTC. Campos textuais nulos
-sao apresentados vazios; duracao nula aparece como zero. O backend nao
-define papeis de aluno/instrutor; a interface nao inventa essa classificacao.
+sao apresentados vazios; duracao nula aparece como zero.

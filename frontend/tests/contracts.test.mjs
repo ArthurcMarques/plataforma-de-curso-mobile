@@ -16,8 +16,8 @@ test("rotas das 14 colecoes e chaves compostas", () => {
 test("usuario nao expoe senha e nao envia senha vazia na edicao", () => {
     assert.deepEqual(fromApi("usuarios", {
         ID_Usuario: 2, NomeCompleto: "Ana", Email: "ana@example.com",
-        DataCadastro: "2026-09-30T12:00:00.000Z", SenhaHash: "nao-expor"
-    }), { id: 2, nomeCompleto: "Ana", email: "ana@example.com", dataCadastro: "2026-09-30" });
+        DataCadastro: "2026-09-30T12:00:00.000Z", SenhaHash: "nao-expor", Perfil: "ALUNO"
+    }), { id: 2, nomeCompleto: "Ana", email: "ana@example.com", dataCadastro: "2026-09-30", perfil: "ALUNO" });
     assert.deepEqual(toApi("usuarios", { nomeCompleto: "Ana", senha: "" }), { name: "Ana" });
     assert.deepEqual(toApi("usuarios", { email: "ana@example.com", senha: "123456" }), {
         email: "ana@example.com", password: "123456"

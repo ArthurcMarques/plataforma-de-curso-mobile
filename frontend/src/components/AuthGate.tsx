@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { AUTH_EVENT, getToken, login, logout, register } from "../services/api";
+import { AUTH_EVENT, getToken, getSession, login, logout, register } from "../services/api";
+import { SessionContext, profileNames } from "../auth/session";
+import type { SessionUser } from "../auth/session";
 
 export function AuthGate({ children }: { children: ReactNode }) {
     const [token, setToken] = useState(getToken);
+    const [user, setUser] = useState<SessionUser | null>(null);
+    const [sessionError, setSessionError] = useState("");
+    const [retry, setRetry] = useState(0);
     const [creating, setCreating] = useState(false);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -15,11 +20,24 @@ export function AuthGate({ children }: { children: ReactNode }) {
     useEffect(() => {
         const changed = () => {
             setToken(getToken());
+            setUser(null);
             setPassword("");
         };
         window.addEventListener(AUTH_EVENT, changed);
         return () => window.removeEventListener(AUTH_EVENT, changed);
     }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        setUser(null);
+        setSessionError("");
+        if (token) getSession().then(current => {
+            if (!cancelled) setUser(current);
+        }).catch(error => {
+            if (!cancelled) setSessionError(error instanceof Error ? error.message : "Falha ao carregar sessão.");
+        });
+        return () => { cancelled = true; };
+    }, [token, retry]);
 
     async function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -42,12 +60,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
         }
     }
 
-    if (token) return <>
+    if (token && !user) return <main className="container py-5">
+        <p role="status">{sessionError || "Carregando seu perfil..."}</p>
+        {sessionError && <button className="btn btn-primary me-2" onClick={() => setRetry(value => value + 1)}>Tentar novamente</button>}
+        <button className="btn btn-outline-secondary" onClick={logout}>Sair</button>
+    </main>;
+    if (token && user) return <SessionContext.Provider value={user}>
         <div className="d-flex justify-content-end p-3">
+            <span className="me-3 align-self-center">{user.name} · {profileNames[user.perfil]}</span>
             <button className="btn btn-outline-secondary" onClick={logout}>Sair</button>
         </div>
         {children}
-    </>;
+    </SessionContext.Provider>;
 
     return <main className="container py-5">
         <section className="panel mx-auto" style={{ maxWidth: 480 }}>

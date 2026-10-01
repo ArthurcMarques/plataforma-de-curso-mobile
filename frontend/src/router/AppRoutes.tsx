@@ -16,11 +16,30 @@ import { SubscriptionsPage } from "../pages/SubscriptionsPage";
 import { TracksPage } from "../pages/TracksPage";
 import { UsersPage } from "../pages/UsersPage";
 import { CertificatesPage } from "../pages/CertificatesPage";
+import { useSession, homePaths } from "../auth/session";
+import { StudentArea } from "../pages/StudentArea";
+import { InstructorArea } from "../pages/InstructorArea";
+import { AdminArea } from "../pages/AdminArea";
 
 export function AppRoutes(props: PageProps) {
+    const user = useSession();
+    const home = homePaths[user.perfil];
+    if (user.perfil === "ALUNO") return <Routes>
+        <Route path="/aluno" element={<StudentArea {...props} />} />
+        <Route path="*" element={<Navigate to={home} replace />} />
+    </Routes>;
+    if (user.perfil === "INSTRUTOR") return <Routes>
+        <Route path="/instrutor" element={<InstructorArea {...props} />} />
+        <Route path="/cursos" element={<CoursesPage {...props} />} />
+        <Route path="/modulos" element={<ModulesPage {...props} />} />
+        <Route path="/aulas" element={<LessonsPage {...props} />} />
+        <Route path="*" element={<Navigate to={home} replace />} />
+    </Routes>;
     return (
         <Routes>
-            <Route path="/" element={<DashboardPage {...props} />} />
+            <Route path="/" element={<Navigate to={home} replace />} />
+            <Route path="/administrador" element={<AdminArea {...props} />} />
+            <Route path="/resumo" element={<DashboardPage {...props} />} />
             <Route path="/categorias" element={<CategoriesPage {...props} />} />
             <Route path="/cursos" element={<CoursesPage {...props} />} />
             <Route path="/modulos" element={<ModulesPage {...props} />} />

@@ -13,6 +13,7 @@ export function AppContent({ navigateToSection }: AppContentProps) {
     // Props que todas as paginas recebem para acessar dados e funcoes de CRUD.
     const pageProps: PageProps = {
         data: appData.data,
+        refreshData: appData.refreshData,
         addWithId: appData.addWithId,
         addDirect: appData.addDirect,
         updateById: appData.updateById,

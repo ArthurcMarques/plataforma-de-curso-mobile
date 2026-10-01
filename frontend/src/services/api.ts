@@ -3,6 +3,7 @@
 import type { AppData, CollectionName, RecordId } from "../models/types";
 import { modelSchemas } from "../models/types";
 import { fromApi, toApi, recordPath } from "./contracts";
+import type { Perfil, SessionUser } from "../auth/session";
 
 type AnyRecord = Record<string, any>;
 
@@ -25,6 +26,14 @@ export async function login(email: string, password: string) {
 }
 export async function register(name: string, email: string, password: string) {
     await request("/usuario", { method: "POST", body: JSON.stringify({ name, email, password }) }, false);
+}
+export async function getSession(): Promise<SessionUser> {
+    const user = await request<SessionUser>("/auth/me");
+    if (!["ALUNO", "INSTRUTOR", "ADMINISTRADOR"].includes(user.perfil)) throw new Error("Perfil de acesso inválido.");
+    return user;
+}
+export async function updateProfile(id: RecordId, perfil: Perfil) {
+    await request(`/usuario/${encodeURIComponent(String(id))}/perfil`, { method: "PATCH", body: JSON.stringify({ perfil }) });
 }
 
 // Colecoes da interface mapeadas para os recursos NestJS.

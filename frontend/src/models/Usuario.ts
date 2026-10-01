@@ -7,13 +7,15 @@ export class Usuario {
         id: idSchema,
         nomeCompleto: textSchema,
         email: textSchema,
-        dataCadastro: textSchema
+        dataCadastro: textSchema,
+        perfil: z.enum(["ALUNO", "INSTRUTOR", "ADMINISTRADOR"])
     });
 
     constructor(
         public id: RecordId,
         public nomeCompleto: string,
         public email: string,
-        public dataCadastro: string
+        public dataCadastro: string,
+        public perfil: "ALUNO" | "INSTRUTOR" | "ADMINISTRADOR"
     ) { }
 }

@@ -6,6 +6,7 @@ import type { Usuario } from "../models/types";
 import { normalize, sameId, todayISO } from "../utils";
 import type { PageProps } from "./pageTypes";
 import { ActionButton, SimpleTable } from "./shared";
+import { profileNames } from "../auth/session";
 
 export function UsersPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
     const [nomeCompleto, setNomeCompleto] = useState("");
@@ -58,7 +59,7 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
 
     return (
         <>
-            <PageHeader title="Usuarios" description="Cadastre alunos e instrutores para uso nas demais telas." />
+            <PageHeader title="Usuários" description="Cadastre alunos. Para promover instrutores e administradores, use a página inicial administrativa." />
             <section className="panel">
                 {editingId !== null && <p className="edit-banner">Editando usuario.</p>}
                 <form className="row g-3" onSubmit={saveUser}>
@@ -87,11 +88,12 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
                 </form>
             </section>
             <SimpleTable
-                columns={["Nome", "E-mail", "Cadastro", "Acoes"]}
+                columns={["Nome", "E-mail", "Perfil", "Cadastro", "Acoes"]}
                 emptyText="Nenhum usuario cadastrado."
                 rows={data.usuarios.map((user) => [
                     user.nomeCompleto,
                     user.email,
+                    profileNames[user.perfil],
                     user.dataCadastro,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
                         <ActionButton onClick={() => editUser(user)}>Editar</ActionButton>
