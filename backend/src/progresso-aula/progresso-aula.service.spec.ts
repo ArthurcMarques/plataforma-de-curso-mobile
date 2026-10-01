@@ -1,3 +1,4 @@
+// Testes de conclusões de aulas identificadas pelo par usuário/aula. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProgressoAulaService } from './progresso-aula.service';
 

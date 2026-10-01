@@ -1,3 +1,4 @@
+// Teste de montagem e comportamento básico do componente; depende dos providers configurados no módulo de teste.
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';

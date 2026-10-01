@@ -1,3 +1,4 @@
+// Contrato de entrada para cursos associados a categoria e instrutor. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsDateString,

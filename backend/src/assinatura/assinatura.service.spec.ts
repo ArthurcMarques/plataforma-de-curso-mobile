@@ -1,3 +1,4 @@
+// Testes de assinaturas que vinculam usuários a planos e períodos de acesso. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { AssinaturaService } from './assinatura.service';
 

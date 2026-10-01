@@ -1,3 +1,4 @@
+// Testes de planos com preço e duração. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlanoController } from './plano.controller';
 import { PlanoService } from './plano.service';

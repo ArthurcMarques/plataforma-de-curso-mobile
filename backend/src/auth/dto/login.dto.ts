@@ -1,3 +1,4 @@
+// Validação das credenciais recebidas no login, antes da comparação do hash de senha.
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 

@@ -1,3 +1,4 @@
+// Testes de módulos que agrupam e ordenam as aulas. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { ModuloService } from './modulo.service';
 

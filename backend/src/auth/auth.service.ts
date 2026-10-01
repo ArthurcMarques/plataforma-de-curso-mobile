@@ -1,3 +1,4 @@
+// Confere credenciais com bcrypt e emite o JWT usado nas próximas requisições.
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';

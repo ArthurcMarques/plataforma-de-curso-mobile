@@ -1,3 +1,4 @@
+// Rotas HTTP de pagamentos associados às assinaturas. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PagamentoService } from './pagamento.service';
 import { CreatePagamentoDto } from './dto/create-pagamento.dto';

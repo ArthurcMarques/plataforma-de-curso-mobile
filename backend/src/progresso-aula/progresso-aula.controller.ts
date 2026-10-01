@@ -1,3 +1,4 @@
+// Rotas HTTP de conclusões de aulas identificadas pelo par usuário/aula. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ProgressoAulaService } from './progresso-aula.service';
 import { CreateProgressoAulaDto } from './dto/create-progresso-aula.dto';

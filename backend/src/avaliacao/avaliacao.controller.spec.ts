@@ -1,3 +1,4 @@
+// Testes de avaliações de cursos com nota de 1 a 5 e comentário. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { AvaliacaoController } from './avaliacao.controller';
 import { AvaliacaoService } from './avaliacao.service';

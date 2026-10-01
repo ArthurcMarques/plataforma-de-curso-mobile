@@ -1,3 +1,4 @@
+// Devolve a consulta preparada pelo guard, evitando executar a leitura genérica do controller.
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { of } from 'rxjs';
 

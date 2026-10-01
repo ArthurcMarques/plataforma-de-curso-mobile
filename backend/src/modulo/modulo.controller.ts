@@ -1,3 +1,4 @@
+// Rotas HTTP de módulos que agrupam e ordenam as aulas. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ModuloService } from './modulo.service';
 import { CreateModuloDto } from './dto/create-modulo.dto';

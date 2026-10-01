@@ -1,3 +1,4 @@
+// Teste HTTP da aplicação NestJS; inicializa o módulo real e encerra a instância após cada caso.
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';

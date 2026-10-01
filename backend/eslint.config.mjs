@@ -1,3 +1,4 @@
+// Regras de análise estática e formatação para TypeScript, Node e testes Jest.
 // @ts-check
 import eslint from '@eslint/js';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';

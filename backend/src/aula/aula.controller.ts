@@ -1,3 +1,4 @@
+// Rotas HTTP de aulas vinculadas aos módulos do curso. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { AulaService } from './aula.service';
 import { CreateAulaDto } from './dto/create-aula.dto';

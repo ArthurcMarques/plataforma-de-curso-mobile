@@ -1,3 +1,4 @@
+// Persistência de aulas vinculadas aos módulos do curso. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAulaDto } from './dto/create-aula.dto';
@@ -20,6 +21,7 @@ export class AulaService {
     });
   }
 
+  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
   findAll() {
     return this.prisma.aula.findMany();
   }

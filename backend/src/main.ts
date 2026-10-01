@@ -1,3 +1,4 @@
+// Inicializa a API, a validação dos DTOs e a documentação Swagger; a porta pode ser configurada pelo ambiente.
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';

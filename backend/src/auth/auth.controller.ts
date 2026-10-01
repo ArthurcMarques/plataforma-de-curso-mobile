@@ -1,3 +1,4 @@
+// Expõe o login e os dados da sessão autenticada.
 import { Body, Controller, Get, Req, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { Public } from './public.decorator';
 import type { SessionUser } from './session-user';

@@ -1,3 +1,4 @@
+// Disponibiliza o cliente de banco para os serviços NestJS.
 import { Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 

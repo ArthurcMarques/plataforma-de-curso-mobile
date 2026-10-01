@@ -1,3 +1,4 @@
+// Valida o token Bearer e resolve a identidade e o perfil atuais no banco.
 import 'dotenv/config';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';

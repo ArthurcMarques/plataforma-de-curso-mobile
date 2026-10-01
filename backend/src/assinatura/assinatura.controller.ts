@@ -1,3 +1,4 @@
+// Rotas HTTP de assinaturas que vinculam usuários a planos e períodos de acesso. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { AssinaturaService } from './assinatura.service';
 import { CreateAssinaturaDto } from './dto/create-assinatura.dto';

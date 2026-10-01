@@ -1,3 +1,4 @@
+// Contrato de entrada para conclusões de aulas identificadas pelo par usuário/aula. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsInt, IsOptional } from 'class-validator';
 import { StatusProgresso } from '../../generated/prisma/enums';

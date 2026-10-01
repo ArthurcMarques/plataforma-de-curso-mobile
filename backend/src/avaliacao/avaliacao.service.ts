@@ -1,3 +1,4 @@
+// Persistência de avaliações de cursos com nota de 1 a 5 e comentário. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
@@ -19,6 +20,7 @@ export class AvaliacaoService {
     });
   }
 
+  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
   findAll() {
     return this.prisma.avaliacao.findMany();
   }

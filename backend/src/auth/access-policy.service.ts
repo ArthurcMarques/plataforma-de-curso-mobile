@@ -1,7 +1,9 @@
+// Política central de autorização: limita leituras no banco e valida a propriedade dos vínculos nas escritas.
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SessionUser } from './session-user';
 
+// Relaciona cada rota ao delegate Prisma e aos campos que identificam registros simples ou compostos.
 const resources: Record<string, { model: string; keys: string[] }> = {
   usuario: { model: 'usuario', keys: ['ID_Usuario'] },
   categoria: { model: 'categoria', keys: ['ID_Categoria'] },
@@ -29,10 +31,12 @@ export class AccessPolicyService {
     return this.prisma[config.model];
   }
 
+  // Retorna filtros Prisma, e não resultados: a restrição de acesso é aplicada dentro da consulta ao banco.
   scope(resource: string, user: SessionUser): Record<string, any> {
     if (!resources[resource]) throw new ForbiddenException();
     if (user.perfil === 'ADMINISTRADOR') return {};
     const own = { ID_Usuario: user.userId };
+    // Instrutores acessam seus cursos; alunos acessam conteúdos dos cursos em que estão matriculados.
     const course = user.perfil === 'INSTRUTOR'
       ? { ID_Instrutor: user.userId }
       : { matriculas: { some: own } };
@@ -53,6 +57,7 @@ export class AccessPolicyService {
     }
   }
 
+  // Combina o ID solicitado com o escopo do perfil. O mesmo 404 cobre registro ausente e registro sem acesso.
   async read(resource: string, user: SessionUser, params: Record<string, string>) {
     const config = resources[resource];
     const where = this.scope(resource, user);
@@ -64,6 +69,7 @@ export class AccessPolicyService {
     return row;
   }
 
+  // Converte os parâmetros de rota em chaves numéricas, inclusive pares como usuário/aula.
   private keyWhere(keys: string[], params: Record<string, string>) {
     return Object.fromEntries(keys.map(key => {
       const param = keys.length === 1 ? 'id' : `id${key.slice(3)}`;
@@ -85,8 +91,10 @@ export class AccessPolicyService {
     if (!row) throw new ForbiddenException('Matricule-se no curso para acessar este recurso.');
   }
 
+  // Valida tanto o registro atual quanto o destino dos vínculos enviados em POST/PATCH.
   async authorizeWrite(resource: string, method: string, params: Record<string, string>, body: Record<string, any>, user: SessionUser, handler: string) {
     if (!resources[resource]) throw new ForbiddenException();
+    // Mudança de perfil usa uma operação separada; o administrador não pode rebaixar a própria conta.
     if (handler === 'updatePerfil') {
       if (user.perfil !== 'ADMINISTRADOR' || Number(params.id) === user.userId) {
         throw new ForbiddenException('Somente administradores podem alterar o perfil de outros usuarios.');
@@ -101,6 +109,7 @@ export class AccessPolicyService {
       if ('perfil' in body || 'Perfil' in body) throw new ForbiddenException('Perfil exige administrador.');
       return;
     }
+    // A lista de operações é explícita: recursos não previstos ficam bloqueados para perfis comuns.
     const instructorWrite = user.perfil === 'INSTRUTOR' && ['curso', 'modulo', 'aula'].includes(resource);
     const studentWrite = user.perfil === 'ALUNO' && (
       (resource === 'matricula' && method === 'POST') ||
@@ -109,8 +118,10 @@ export class AccessPolicyService {
     );
     if (!instructorWrite && !studentWrite) throw new ForbiddenException('Seu perfil nao permite esta operacao.');
     let existing: Record<string, any> | undefined;
+    // Antes de editar ou excluir, confirma que o registro existente pertence ao escopo do usuário.
     if (method !== 'POST') existing = await this.read(resource, user, params);
     if (method === 'DELETE') return;
+    // Também verifica o novo curso/módulo para impedir transferir um registro para outro instrutor.
     if (instructorWrite) {
       if (resource === 'curso' && (body.idInstrutor ?? existing?.ID_Instrutor) !== user.userId) throw new ForbiddenException('O instrutor deve ser o usuario autenticado.');
       if (resource === 'modulo') await this.ownsCourse(body.idCurso ?? existing?.ID_Curso, user);
@@ -123,6 +134,7 @@ export class AccessPolicyService {
       }
       return;
     }
+    // O aluno só pode criar ou alterar vínculos em seu próprio nome.
     if ((body.idUsuario ?? existing?.ID_Usuario) !== user.userId) throw new ForbiddenException('Nao e permitido agir em nome de outro aluno.');
     if (resource === 'matricula') {
       if (body.dataConclusao != null) throw new ForbiddenException('Conclusao da matricula exige administrador.');

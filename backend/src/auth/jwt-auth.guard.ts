@@ -1,3 +1,4 @@
+// Exige JWT nas rotas protegidas e respeita os metadados de rotas públicas.
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';

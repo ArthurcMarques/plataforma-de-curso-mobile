@@ -1,3 +1,4 @@
+// Cliente Prisma compartilhado, conectado ao PostgreSQL pelo adaptador pg e pela DATABASE_URL.
 import 'dotenv/config';
 import { Injectable } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';

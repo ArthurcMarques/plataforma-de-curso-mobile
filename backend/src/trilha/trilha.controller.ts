@@ -1,3 +1,4 @@
+// Rotas HTTP de trilhas que organizam sequências de cursos. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { TrilhaService } from './trilha.service';
 import { CreateTrilhaDto } from './dto/create-trilha.dto';

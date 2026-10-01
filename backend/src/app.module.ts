@@ -1,3 +1,4 @@
+// Módulo raiz: reúne os recursos de negócio, a persistência e a autenticação da API.
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';

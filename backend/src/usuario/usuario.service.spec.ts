@@ -1,3 +1,4 @@
+// Testes de contas de usuários e seus perfis de acesso. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsuarioService } from './usuario.service';
 

@@ -1,3 +1,4 @@
+// Contrato de entrada para matrículas que vinculam usuários aos cursos. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsInt, IsOptional } from 'class-validator';
 

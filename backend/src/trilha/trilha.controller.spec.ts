@@ -1,3 +1,4 @@
+// Testes de trilhas que organizam sequências de cursos. A criação do módulo de teste verifica a montagem das dependências; não substitui os testes de permissões da API.
 import { Test, TestingModule } from '@nestjs/testing';
 import { TrilhaController } from './trilha.controller';
 import { TrilhaService } from './trilha.service';

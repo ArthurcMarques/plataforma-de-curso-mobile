@@ -17,6 +17,7 @@ datasource db {
 // USUARIOS
 // ==============================
 
+// Identidade e perfil de acesso. SenhaHash armazena o hash bcrypt; o cadastro público usa ALUNO.
 model Usuario {
   ID_Usuario   Int      @id @default(autoincrement())
   NomeCompleto String
@@ -38,6 +39,7 @@ model Usuario {
 // CATEGORIAS
 // ==============================
 
+// Agrupamento compartilhado por cursos e trilhas; Nome é único no banco.
 model Categoria {
   ID_Categoria Int     @id @default(autoincrement())
   Nome         String  @unique
@@ -52,6 +54,7 @@ model Categoria {
 // CURSOS
 // ==============================
 
+// Pertence a um instrutor e uma categoria; reúne módulos, matrículas e avaliações.
 model Curso {
   ID_Curso       Int      @id @default(autoincrement())
   Titulo         String
@@ -78,6 +81,7 @@ model Curso {
 // MODULOS
 // ==============================
 
+// Organiza as aulas de um curso por Ordem. A interface verifica ordens repetidas.
 model Modulo {
   ID_Modulo Int    @id @default(autoincrement())
   ID_Curso  Int
@@ -93,6 +97,7 @@ model Modulo {
 // AULAS
 // ==============================
 
+// Conteúdo de um módulo, com tipo, endereço opcional e duração em minutos.
 model Aula {
   ID_Aula        Int          @id @default(autoincrement())
   ID_Modulo      Int
@@ -111,6 +116,7 @@ model Aula {
 // MATRICULAS
 // ==============================
 
+// Associação entre usuário e curso; a conclusão é opcional e separada do progresso das aulas.
 model Matricula {
   ID_Matricula  Int      @id @default(autoincrement())
   ID_Usuario    Int
@@ -127,6 +133,7 @@ model Matricula {
 // PROGRESSO_AULAS
 // ==============================
 
+// Conclusão identificada pelo par usuário/aula: a chave composta impede duplicar esse par.
 model ProgressoAula {
   ID_Usuario    Int
   ID_Aula       Int
@@ -144,6 +151,7 @@ model ProgressoAula {
 // AVALIACOES
 // ==============================
 
+// Opinião do usuário sobre o curso: nota inteira de 1 a 5 validada na API, comentário e data editável.
 model Avaliacao {
   ID_Avaliacao  Int      @id @default(autoincrement())
   ID_Usuario    Int
@@ -161,6 +169,7 @@ model Avaliacao {
 // TRILHAS
 // ==============================
 
+// Sequência de cursos de uma categoria; a ordem de cada curso está em TrilhaCurso.
 model Trilha {
   ID_Trilha    Int     @id @default(autoincrement())
   Titulo       String
@@ -177,6 +186,7 @@ model Trilha {
 // TRILHAS_CURSOS
 // ==============================
 
+// Tabela de associação com chave composta: um curso aparece no máximo uma vez em cada trilha.
 model TrilhaCurso {
   ID_Trilha Int
   ID_Curso  Int
@@ -193,6 +203,7 @@ model TrilhaCurso {
 // CERTIFICADOS
 // ==============================
 
+// Registro de emissão para usuário e curso; pode indicar uma trilha e possui código único.
 model Certificado {
   ID_Certificado    Int      @id @default(autoincrement())
   ID_Usuario        Int
@@ -211,6 +222,7 @@ model Certificado {
 // PLANOS
 // ==============================
 
+// Oferta com preço decimal e duração em meses, referenciada pelas assinaturas.
 model Plano {
   ID_Plano     Int      @id @default(autoincrement())
   Nome         String
@@ -226,6 +238,7 @@ model Plano {
 // ASSINATURAS
 // ==============================
 
+// Vínculo do usuário com um plano durante um intervalo de datas, associado a pagamentos.
 model Assinatura {
   ID_Assinatura Int      @id @default(autoincrement())
   ID_Usuario    Int
@@ -243,6 +256,7 @@ model Assinatura {
 // PAGAMENTOS
 // ==============================
 
+// Pagamento de uma assinatura com valor decimal, método e identificação da transação.
 model Pagamento {
   ID_Pagamento         Int             @id @default(autoincrement())
   ID_Assinatura        Int

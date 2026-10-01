@@ -1,3 +1,4 @@
+// Contrato de entrada para categorias que organizam cursos e trilhas. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 

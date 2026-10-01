@@ -1,3 +1,4 @@
+// Registra o controller e o serviço de conclusões de aulas identificadas pelo par usuário/aula no contêiner de dependências do NestJS.
 import { Module } from '@nestjs/common';
 import { ProgressoAulaService } from './progresso-aula.service';
 import { ProgressoAulaController } from './progresso-aula.controller';

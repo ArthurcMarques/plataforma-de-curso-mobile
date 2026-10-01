@@ -1,3 +1,4 @@
+// Rotas HTTP de planos com preço e duração. A política global de acesso verifica o perfil e a propriedade dos registros.
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PlanoService } from './plano.service';
 import { CreatePlanoDto } from './dto/create-plano.dto';

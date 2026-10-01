@@ -1,3 +1,4 @@
+// Contrato de entrada para pagamentos associados às assinaturas. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { MetodoPagamento } from '../../generated/prisma/enums';

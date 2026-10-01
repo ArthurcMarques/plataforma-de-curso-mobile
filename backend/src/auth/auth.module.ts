@@ -1,3 +1,4 @@
+// Configura os componentes de autenticação e autorização compartilhados pela API.
 import 'dotenv/config';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';

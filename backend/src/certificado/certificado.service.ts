@@ -1,3 +1,4 @@
+// Persistência de certificados emitidos para usuários e cursos. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCertificadoDto } from './dto/create-certificado.dto';
@@ -18,6 +19,7 @@ export class CertificadoService {
     });
   }
 
+  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
   findAll() {
     return this.prisma.certificado.findMany();
   }

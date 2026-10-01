@@ -1,3 +1,4 @@
+// Registra o controller e o serviço de vínculos ordenados entre trilhas e cursos no contêiner de dependências do NestJS.
 import { Module } from '@nestjs/common';
 import { TrilhaCursoService } from './trilha-curso.service';
 import { TrilhaCursoController } from './trilha-curso.controller';

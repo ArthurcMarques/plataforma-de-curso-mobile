@@ -1,3 +1,4 @@
+// Contrato de entrada para assinaturas que vinculam usuários a planos e períodos de acesso. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsInt } from 'class-validator';
 
