@@ -2,6 +2,57 @@
 
 Os scripts devem ser executados manualmente. Nenhum deles inicia a API.
 
+Todos ficam em `plataforma-cursos/scripts/`. Os comandos `node scripts/...`
+abaixo devem ser executados na raiz de `plataforma-cursos`.
+
+## Popular o banco
+
+Requer Node.js 20+ no host, API em execucao e migrations aplicadas.
+Nao precisa executar `npm install` nem instalar dependencias para o script.
+Com Docker, inicie os servicos e execute:
+
+```powershell
+docker compose up -d
+node scripts/popular-banco.mjs
+```
+
+Caso tenha alterado `API_PORT`, passe a URL explicitamente (o script nao le `.env`):
+
+```powershell
+node scripts/popular-banco.mjs http://localhost:3001
+```
+
+Sem Node instalado no host, use o Node do container da API, a partir da raiz:
+
+```powershell
+Get-Content -Raw scripts/popular-banco.mjs | docker compose exec -T api node --input-type=module
+```
+
+A carga usa a API NestJS, que gera os hashes das senhas e os IDs. Cria 28
+registros distribuidos pelas 14 tabelas: dois usuarios, categoria, dois cursos,
+dois modulos, seis aulas, duas matriculas, quatro progressos, duas avaliacoes,
+trilha, dois vinculos de cursos, certificado, plano, assinatura e pagamento.
+O primeiro curso fica concluido e o segundo parcialmente concluido.
+URLs de aulas e transacao financeira sao ficticias; nao ha cobranca real.
+
+O terminal mostra os emails e uma senha aleatoria para entrar no frontend.
+Cada execucao adiciona um conjunto novo, identificado por UUID nos nomes e
+emails. Nao e idempotente: repetir adiciona dados. Nao apaga nem altera dados
+preexistentes, nao presume IDs fixos e nao executa o script de limpeza.
+
+Se houver falha, o processo retorna codigo 1 e mantem os registros parciais.
+Nao existe transacao global entre requisicoes HTTP. Confira as rotas/IDs
+impressos e o UUID do conjunto antes de repetir; em timeout, a ultima operacao
+pode ter sido persistida mesmo sem resposta. Sucesso retorna codigo 0.
+
+O script foi preparado sem executar a carga no banco. Para conferir sintaxe
+sem criar dados e ver a ajuda:
+
+```powershell
+node --check scripts/popular-banco.mjs
+node scripts/popular-banco.mjs --help
+```
+
 ## Limpar os dados
 
 `limpar-dados.sql` apaga todos os registros dos 14 modelos em `public` e reinicia

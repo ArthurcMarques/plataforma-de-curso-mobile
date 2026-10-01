@@ -114,6 +114,24 @@ Confira tambem [o roteiro de validacao do frontend](frontend/VALIDACAO.md).
 
 ## Operacao
 
+### Scripts na raiz
+
+Os scripts compartilhados ficam em [`scripts/`](scripts/README.md):
+
+- `popular-banco.mjs`: adiciona dados de demonstracao nas 14 tabelas pela API.
+- `testar-endpoints.mjs`: verifica os endpoints e tenta remover os dados de teste.
+- `limpar-dados.sql`: apaga todos os registros das tabelas da aplicacao.
+
+Com a API em execucao, execute da raiz (Node.js 20+):
+
+```powershell
+node scripts/popular-banco.mjs
+```
+
+Os logins de demonstracao aparecem no terminal. Cada execucao adiciona um
+novo conjunto; nao e necessario limpar o banco antes. Consulte o README dos
+scripts para porta alternativa, execucao pelo container e comportamento em falhas.
+
 ### Banco pelo navegador (pgAdmin)
 
 Acrescente ao `.env` existente (nao sobrescreva as senhas atuais):
