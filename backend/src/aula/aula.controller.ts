@@ -3,9 +3,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { AulaService } from './aula.service';
 import { CreateAulaDto } from './dto/create-aula.dto';
 import { UpdateAulaDto } from './dto/update-aula.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('aula')
+@ApiBearerAuth('token')
+@ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
+@ApiResponse({ status: 403, description: 'Operação não permitida para este perfil.' })
 @Controller('aula')
 export class AulaController {
   constructor(private readonly aulaService: AulaService) {}

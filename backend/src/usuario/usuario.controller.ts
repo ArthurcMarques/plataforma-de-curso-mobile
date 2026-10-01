@@ -22,6 +22,9 @@ export class UsuarioController {
     return this.usuarioService.create(createUsuarioDto);
   }
 
+  @ApiBearerAuth('token')
+  @ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'A alteração de perfil exige administrador.' })
   @Patch(':id/perfil')
   updatePerfil(@Param('id') id: string, @Body() dto: UpdatePerfilDto) {
     return this.usuarioService.updatePerfil(+id, dto.perfil);

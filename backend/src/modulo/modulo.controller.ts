@@ -3,9 +3,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ModuloService } from './modulo.service';
 import { CreateModuloDto } from './dto/create-modulo.dto';
 import { UpdateModuloDto } from './dto/update-modulo.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('modulo')
+@ApiBearerAuth('token')
+@ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
+@ApiResponse({ status: 403, description: 'Operação não permitida para este perfil.' })
 @Controller('modulo')
 export class ModuloController {
   constructor(private readonly moduloService: ModuloService) {}

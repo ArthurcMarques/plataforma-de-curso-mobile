@@ -3,9 +3,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { PlanoService } from './plano.service';
 import { CreatePlanoDto } from './dto/create-plano.dto';
 import { UpdatePlanoDto } from './dto/update-plano.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('plano')
+@ApiBearerAuth('token')
+@ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
+@ApiResponse({ status: 403, description: 'Operação não permitida para este perfil.' })
 @Controller('plano')
 export class PlanoController {
   constructor(private readonly planoService: PlanoService) {}

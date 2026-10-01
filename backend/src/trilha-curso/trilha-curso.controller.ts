@@ -3,9 +3,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { TrilhaCursoService } from './trilha-curso.service';
 import { CreateTrilhaCursoDto } from './dto/create-trilha-curso.dto';
 import { UpdateTrilhaCursoDto } from './dto/update-trilha-curso.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('trilha-curso')
+@ApiBearerAuth('token')
+@ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
+@ApiResponse({ status: 403, description: 'Operação não permitida para este perfil.' })
 @Controller('trilha-curso')
 export class TrilhaCursoController {
   constructor(private readonly trilhaCursoService: TrilhaCursoService) {}

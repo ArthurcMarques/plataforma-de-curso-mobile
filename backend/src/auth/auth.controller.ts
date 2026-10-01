@@ -2,7 +2,7 @@
 import { Body, Controller, Get, Req, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { Public } from './public.decorator';
 import type { SessionUser } from './session-user';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -21,6 +21,8 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @ApiBearerAuth('token')
+  @ApiResponse({ status: 401, description: 'Token ausente, inválido ou expirado.' })
   @Get('me')
   me(@Req() request: { user: SessionUser }) {
     return request.user;
