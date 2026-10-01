@@ -23,7 +23,7 @@ const enums: Record<string, Record<string, string>> = {
     status: { CONCLUIDO: "Concluído" },
     metodoPagamento: { PIX: "Pix", CARTAO: "Cartão", BOLETO: "Boleto" }
 };
-const generatedDates = new Set(["dataCadastro", "dataMatricula", "dataAvaliacao", "dataEmissao"]);
+const generatedDates = new Set(["dataCadastro", "dataMatricula", "dataEmissao"]);
 const numeric = new Set(["totalAulas", "totalHoras", "ordem", "duracaoMinutos", "nota", "preco", "duracaoMeses", "valorPago"]);
 function apiField(field: string) {
     if (field === "urlConteudo") return "URL_Conteudo";

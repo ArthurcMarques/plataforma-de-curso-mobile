@@ -14,6 +14,7 @@ export class AvaliacaoService {
         ID_Curso: createAvaliacaoDto.idCurso,
         Nota: createAvaliacaoDto.nota,
         Comentario: createAvaliacaoDto.comentario,
+        DataAvaliacao: createAvaliacaoDto.dataAvaliacao ? new Date(createAvaliacaoDto.dataAvaliacao) : undefined,
       },
     });
   }
@@ -34,6 +35,7 @@ export class AvaliacaoService {
         ID_Curso: updateAvaliacaoDto.idCurso,
         Nota: updateAvaliacaoDto.nota,
         Comentario: updateAvaliacaoDto.comentario,
+        DataAvaliacao: updateAvaliacaoDto.dataAvaliacao ? new Date(updateAvaliacaoDto.dataAvaliacao) : undefined,
       },
     });
   }

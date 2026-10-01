@@ -1,5 +1,22 @@
 # Validacao da integracao
 
+## Avaliações conforme o frontend de referência
+
+Referência: https://github.com/ArthurcMarques/plataforma-de-cursos-react-e-json-server
+(commit `be5471d`, `src/pages/ReviewsPage.tsx`). Campos: usuário, curso,
+nota inteira de 1 a 5, comentário e data editável. As permissões por perfil
+continuam aplicadas na API: aluno altera suas avaliações, instrutor consulta
+as de seus cursos e administrador gerencia todas.
+
+Crie uma avaliação com data anterior à atual, recarregue e confira a persistência.
+Edite a data e confira novamente. Notas fora de 1–5 devem ser rejeitadas pela API.
+Não é necessária migration. Para atualizar, execute na raiz:
+
+```powershell
+docker compose up -d --build api frontend
+```
+
+
 ## Navegação dentro do curso
 
 Roteiro manual para administrador e instrutor:
@@ -56,7 +73,7 @@ node --experimental-strip-types --test tests/contracts.test.mjs
 6. Crie trilha e vincule dois cursos. Exclua apenas um vinculo, conferindo
    `/trilha-curso/<trilha>/<curso>` e a preservacao do outro.
 7. Cadastre avaliacao e emita certificado apos concluir uma aula. Confira
-   as datas geradas pelo servidor e o codigo do certificado.
+   a data escolhida na avaliacao, a data gerada do certificado e seu codigo.
 8. Cadastre plano, assinatura e pagamentos com Pix, Cartao e Boleto;
    edite e confira valores decimais, datas e metodo apos recarregar.
 9. Edite um usuario sem preencher senha; o login antigo deve continuar
