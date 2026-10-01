@@ -1,0 +1,18 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { ProgressoAulaService } from './progresso-aula.service';
+
+describe('ProgressoAulaService', () => {
+  let service: ProgressoAulaService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [ProgressoAulaService],
+    }).compile();
+
+    service = module.get<ProgressoAulaService>(ProgressoAulaService);
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+});

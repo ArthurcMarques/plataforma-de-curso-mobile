@@ -1,0 +1,17 @@
+{
+  "usuarios": [],
+  "categorias": [],
+  "cursos": [],
+  "modulos": [],
+  "aulas": [],
+  "matriculas": [],
+  "progressoAulas": [],
+  "avaliacoes": [],
+  "trilhas": [],
+  "trilhasCursos": [],
+  "certificados": [],
+  "planos": [],
+  "assinaturas": [],
+  "pagamentos": [],
+  "$schema": "./node_modules/json-server/schema.json"
+}

@@ -1,0 +1,268 @@
+/* Variaveis de cores e efeitos usados no layout. */
+:root {
+    --brand-ink: #1f2a44;
+    --brand-ink-soft: #41506f;
+    --brand-accent: #0f766e;
+    --brand-card: #fffdf7;
+    --brand-line: #e9decd;
+    --shadow-card: 0 12px 28px -22px rgba(31, 42, 68, 0.5);
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    background:
+        radial-gradient(circle at 8% 6%, rgba(245, 158, 11, 0.13) 0, transparent 28%),
+        radial-gradient(circle at 88% 14%, rgba(15, 118, 110, 0.15) 0, transparent 31%),
+        linear-gradient(135deg, #f8f4eb 0%, #f2f6f8 100%);
+    color: var(--brand-ink);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Barra de navegacao superior. */
+.app-nav {
+    background-color: rgba(255, 253, 247, 0.92);
+    border-bottom: 1px solid rgba(233, 222, 205, 0.9);
+    box-shadow: 0 16px 40px -28px rgba(27, 38, 59, 0.6);
+}
+
+.navbar .nav-link {
+    border-radius: 999px;
+    color: var(--brand-ink-soft);
+    font-weight: 600;
+    padding: 0.4rem 0.85rem;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.active {
+    background-color: rgba(15, 118, 110, 0.14);
+    color: var(--brand-ink);
+}
+
+.dropdown-menu {
+    border: 1px solid var(--brand-line);
+    border-radius: 0.8rem;
+    box-shadow: var(--shadow-card);
+    padding: 0.45rem;
+}
+
+.dropdown-item {
+    border-radius: 0.55rem;
+    font-weight: 500;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item.active {
+    background-color: rgba(15, 118, 110, 0.12);
+    color: var(--brand-ink);
+}
+
+/* Container principal das paginas. */
+.app-main {
+    padding-bottom: 2.75rem;
+    padding-top: 2.75rem;
+}
+
+/* Painel base usado em formularios, tabelas e blocos de conteudo. */
+.panel {
+    background: var(--brand-card);
+    border: 1px solid var(--brand-line);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+    padding: 1.4rem;
+}
+
+.panel + .panel,
+.panel + .stats-grid,
+.stats-grid + .panel {
+    margin-top: 1.25rem;
+}
+
+/* Destaque da tela inicial. */
+.hero-panel {
+    padding: 2.25rem;
+    text-align: center;
+}
+
+.hero-panel p {
+    color: var(--brand-ink-soft);
+}
+
+.stats-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stat-card {
+    background: var(--brand-card);
+    border: 1px solid var(--brand-line);
+    border-radius: 1rem;
+    box-shadow: var(--shadow-card);
+    color: var(--brand-ink);
+    padding: 1.35rem;
+    text-align: left;
+}
+
+.stat-card span {
+    color: var(--brand-ink-soft);
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card strong {
+    display: block;
+    font-size: 2rem;
+}
+
+.progress-summary {
+    color: var(--brand-ink-soft);
+    font-weight: 600;
+}
+
+.progress-tree {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: 1.25rem;
+}
+
+.course-progress-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.progress-pill {
+    background-color: rgba(15, 118, 110, 0.12);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    border-radius: 999px;
+    color: #0f5f59;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    white-space: nowrap;
+}
+
+.module-progress {
+    border-top: 1px solid var(--brand-line);
+    padding-top: 1rem;
+}
+
+.module-progress + .module-progress {
+    margin-top: 1rem;
+}
+
+.lesson-checklist {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.lesson-checkbox {
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(233, 222, 205, 0.9);
+    border-radius: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.8rem;
+}
+
+.lesson-checkbox input {
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    width: 1.1rem;
+}
+
+.lesson-checkbox small {
+    color: var(--brand-ink-soft);
+    display: block;
+    margin-top: 0.15rem;
+}
+
+.floating-alert {
+    left: 50%;
+    max-width: min(92vw, 520px);
+    position: fixed;
+    top: 1rem;
+    transform: translateX(-50%);
+    width: max-content;
+    z-index: 1080;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--brand-accent), #155e75);
+    border-color: transparent;
+    font-weight: 700;
+}
+
+.btn-outline-primary {
+    border-color: rgba(15, 118, 110, 0.45);
+    color: #0f5f59;
+}
+
+.form-label {
+    color: var(--brand-ink);
+    font-weight: 700;
+}
+
+.field-heading {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.edit-banner {
+    background-color: rgba(15, 118, 110, 0.1);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    border-radius: 0.75rem;
+    color: #0f5f59;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+}
+
+.form-control,
+.form-select {
+    border-color: var(--brand-line);
+    border-radius: 0.75rem;
+}
+
+table thead th {
+    background-color: #ebe4d8 !important;
+    border-bottom: 1px solid #ded1be !important;
+    color: var(--brand-ink);
+    font-weight: 800;
+}
+
+.table > :not(caption) > * > * {
+    border-color: #e6dbcb;
+}
+
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .app-main {
+        padding-bottom: 1.25rem;
+        padding-top: 1.25rem;
+    }
+
+    .hero-panel,
+    .panel {
+        padding: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
