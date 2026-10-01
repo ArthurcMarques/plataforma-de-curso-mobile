@@ -63,6 +63,10 @@ async function create(route, keys, body) {
 async function main() {
   console.log(`API: ${base}\nConjunto: ${batch}`);
   await request('GET', '/');
+  if (!process.env.ADMIN_TOKEN) throw new Error('Defina ADMIN_TOKEN com um JWT de administrador antes de popular.');
+  token = process.env.ADMIN_TOKEN;
+  const admin = await request('GET', '/auth/me');
+  if (admin.perfil !== 'ADMINISTRADOR') throw new Error('A carga exige um administrador.');
   // Credenciais sao novas a cada execucao e permitem entrar pelo frontend.
   console.log(`Login do instrutor: ${instructorEmail}`);
   console.log(`Login do aluno: ${studentEmail}`);
@@ -70,9 +74,7 @@ async function main() {
   const instructor = await create('usuario', ['ID_Usuario'], {
     name: `Marina Oliveira (${label})`, email: instructorEmail, password,
   });
-  const auth = await request('POST', '/auth/login', { email: instructorEmail, password });
-  if (typeof auth?.access_token !== 'string' || !auth.access_token) throw new Error('Login nao retornou token.');
-  token = auth.access_token;
+  await request('PATCH', `/usuario/${instructor.ID_Usuario}/perfil`, { perfil: 'INSTRUTOR' });
   const student = await create('usuario', ['ID_Usuario'], {
     name: `Lucas Santos (${label})`, email: studentEmail, password,
   });
@@ -136,7 +138,7 @@ async function main() {
   });
   console.log(`\nConcluido: ${created.length} registros criados nas 14 tabelas.`);
   console.log('Os dados foram mantidos no banco. Atualize o frontend ou consulte pelo pgAdmin.');
-  console.log('Os nomes aluno/instrutor descrevem os exemplos; a API nao possui papeis de acesso.');
+  console.log('O instrutor acessa a area de cursos; o aluno acessa suas matriculas e progresso.');
 }
 
 main().catch(error => {

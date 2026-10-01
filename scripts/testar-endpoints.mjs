@@ -9,6 +9,7 @@ const token = randomUUID();
 const records = {};
 const cleanup = [];
 let accessToken;
+const adminToken = process.env.ADMIN_TOKEN;
 let credentials;
 let passed = 0;
 let failures = 0;
@@ -87,7 +88,7 @@ const scenarios = [
       metodoPagamento: 'MetodoPagamento', idTransacaoGateway: 'Id_Transacao_Gateway' } },
 ];
 
-async function request(method, path, expectedStatus, body, bearer = accessToken) {
+async function request(method, path, expectedStatus, body, bearer = adminToken) {
   let response;
   try {
     response = await fetch(`${baseUrl}${path}`, {
@@ -149,6 +150,9 @@ function checkFields(row, input, map) {
 }
 
 try {
+  assert.ok(adminToken, 'Defina ADMIN_TOKEN com um JWT de administrador.');
+  const admin = await request('GET', '/auth/me', 200);
+  assert.equal(admin.perfil, 'ADMINISTRADOR', 'O teste CRUD exige administrador.');
   console.log(`API: ${baseUrl}\nIdentificador desta execucao: ${token}`);
   assert.equal(await request('GET', '/', 200), 'Hello World!');
   ok('GET /');
@@ -177,7 +181,7 @@ try {
     ok(`POST ${path}: rejeita campos obrigatorios ausentes`);
 
     const input = scenario.body();
-    const created = await request('POST', path, 201, input, null);
+    const created = await request('POST', path, 201, input, scenario.route === 'usuario' ? null : adminToken);
     for (const key of scenario.keys) assert.ok(Number.isInteger(created?.[key]), `${path}: ID ausente: ${key}`);
     const itemPath = `${path}/${scenario.keys.map(key => created[key]).join('/')}`;
     // Registra para limpeza antes das demais assercoes.
@@ -237,7 +241,7 @@ try {
       ok('Login rejeita a senha antiga apos a troca');
       await login();
       ok('Login aceita a nova senha e retorna JWT');
-      const authenticated = await request('GET', itemPath, 200);
+      const authenticated = await request('GET', itemPath, 200, undefined, accessToken);
       assert.ok(matchesKeys(authenticated, created, scenario.keys));
       ok('Novo JWT permite acessar rota protegida');
     }

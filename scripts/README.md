@@ -5,9 +5,45 @@ Os scripts devem ser executados manualmente. Nenhum deles inicia a API.
 Todos ficam em `plataforma-cursos/scripts/`. Os comandos `node scripts/...`
 abaixo devem ser executados na raiz de `plataforma-cursos`.
 
+## Administrador e token para scripts
+
+Depois de aplicar as migrations e cadastrar uma conta, promova-a explicitamente:
+
+```powershell
+Get-Content -Raw scripts/promover-admin.sql | docker compose exec -T postgres psql -U plataforma -d plataforma_cursos -v "email=seu-email@example.com"
+```
+
+Confira `UPDATE 1`. O arquivo usa variaveis do psql e deve ser executado pelo
+comando acima, nao diretamente no Query Tool. Nao cria usuarios nem altera senhas.
+
+Para os scripts de carga, testes CRUD e permissoes, obtenha o token administrativo
+no PowerShell (ajuste a URL se mudou a porta):
+
+```powershell
+$apiUrl = 'http://localhost:3000'
+$adminCredential = Get-Credential -Message 'Conta administradora da plataforma (email e senha)'
+$loginBody = @{ email = $adminCredential.UserName; password = $adminCredential.GetNetworkCredential().Password } | ConvertTo-Json
+$env:ADMIN_TOKEN = (Invoke-RestMethod -Method Post -Uri "$apiUrl/auth/login" -ContentType 'application/json' -Body $loginBody).access_token
+Remove-Variable loginBody, adminCredential
+```
+
+O token expira em uma hora; refaca o login se necessario. Nao coloque o token
+em arquivos versionados. Ao terminar: `Remove-Item Env:ADMIN_TOKEN`.
+
+```powershell
+node scripts/testar-permissoes.mjs
+node scripts/testar-endpoints.mjs
+```
+
+O teste de permissoes cria contas separadas de alunos e instrutores, verifica
+401/403/404, isolamento de listagens, alteracao de perfil, conteudo sem matricula,
+tentativas de transferir conteudo de outro instrutor e acesso financeiro alheio.
+Tenta limpar somente suas fixtures ao terminar; uma interrupcao pode deixar dados.
+Nenhum destes testes foi executado durante a implementacao.
+
 ## Popular o banco
 
-Requer Node.js 20+ no host, API em execucao e migrations aplicadas.
+Requer Node.js 20+ no host, API em execucao, migrations aplicadas e ADMIN_TOKEN.
 Nao precisa executar `npm install` nem instalar dependencias para o script.
 Com Docker, inicie os servicos e execute:
 
@@ -25,7 +61,7 @@ node scripts/popular-banco.mjs http://localhost:3001
 Sem Node instalado no host, use o Node do container da API, a partir da raiz:
 
 ```powershell
-Get-Content -Raw scripts/popular-banco.mjs | docker compose exec -T api node --input-type=module
+Get-Content -Raw scripts/popular-banco.mjs | docker compose exec -T -e "ADMIN_TOKEN=$env:ADMIN_TOKEN" api node --input-type=module
 ```
 
 A carga usa a API NestJS, que gera os hashes das senhas e os IDs. Cria 28
@@ -36,6 +72,7 @@ O primeiro curso fica concluido e o segundo parcialmente concluido.
 URLs de aulas e transacao financeira sao ficticias; nao ha cobranca real.
 
 O terminal mostra os emails e uma senha aleatoria para entrar no frontend.
+O usuario instrutor e promovido pelo administrador usado na carga; o outro e aluno.
 Cada execucao adiciona um conjunto novo, identificado por UUID nos nomes e
 emails. Nao e idempotente: repetir adiciona dados. Nao apaga nem altera dados
 preexistentes, nao presume IDs fixos e nao executa o script de limpeza.
@@ -95,8 +132,8 @@ dos 14 recursos, verifica POST, GET de listagem, GET individual, PATCH e DELETE,
 alem de POST invalido com resposta 400, persistencia da atualizacao e exclusao.
 Confere valores e IDs, incluindo chaves compostas e valores Decimal.
 Tambem verifica o login e a configuracao Bearer no Swagger. O cadastro e feito
-sem token; o JWT e obtido automaticamente e enviado nas requisicoes seguintes.
-Nao precisa informar JWT_SECRET nem colar um token no script.
+sem token; as operacoes de gestao usam ADMIN_TOKEN. O token da conta criada
+tambem e testado para acesso proprio. Nao precisa informar JWT_SECRET.
 
 Verifica login invalido (400), usuario inexistente e senha incorreta (401),
 e bloqueio das quatro rotas protegidas de usuario sem token ou com token invalido.

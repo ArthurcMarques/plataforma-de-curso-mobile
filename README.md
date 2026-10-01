@@ -60,14 +60,57 @@ e acompanha as chamadas como Bearer token. Sair ou receber HTTP 401 remove
 a sessao e retorna ao acesso. A API define a expiracao do token em uma hora.
 
 Senhas sao apenas entradas de cadastro/alteracao, nunca dados de leitura.
-Na edicao de usuario, senha vazia preserva a senha existente. Como a API nao
-possui tipo de usuario, qualquer usuario pode ser selecionado como instrutor.
+Na edicao de usuario, senha vazia preserva a senha existente. Somente usuarios
+com perfil INSTRUTOR aparecem na selecao de instrutor dos cursos.
 Datas de cadastro, matricula, avaliacao e emissao sao geradas pelo backend
 e aparecem como somente leitura nos formularios.
 
 O JSON Server nao e um servico do Compose. O script legado `npm run server`
-e `db.json` foram preservados para referencia. O README de cada projeto
-do backend preserva as instrucoes anteriores; este README descreve o Compose.
+e `db.json` foram preservados para referencia. O README do backend preserva
+instrucoes anteriores; este README descreve o Compose.
+
+## Areas e permissoes
+
+O login consulta `/auth/me` e direciona para `/aluno`, `/instrutor` ou
+`/administrador`. O cadastro publico sempre cria ALUNO, mesmo que a requisicao
+envie outro perfil. Perfis sao conferidos no banco a cada requisicao autenticada.
+
+| Perfil | Area e permissoes |
+| --- | --- |
+| Aluno | Catalogo, matricula propria, conteudo dos cursos matriculados, marcar/desmarcar seu progresso e consultar seus certificados. Na API, pode editar a propria conta e suas avaliacoes de cursos matriculados. |
+| Instrutor | Criar/editar/excluir seus cursos, modulos e aulas; consultar suas turmas e progresso dos alunos nesses cursos. Nao gerencia perfis nem financeiro de terceiros. |
+| Administrador | Gestao geral pelo painel existente e alteracao dos perfis de outros usuarios na pagina inicial administrativa. |
+
+As listagens sao limitadas no banco. IDs de registros fora do escopo retornam
+404; operacoes nao permitidas retornam 403; ausencia de autenticacao retorna
+401. Login, cadastro, verificacao de disponibilidade e Swagger continuam publicos.
+Nao e permitido transferir conteudos para cursos de outro instrutor. Somente
+administradores emitem certificados, registram pagamentos e gerenciam assinaturas.
+
+### Ativar a atualizacao e promover o primeiro administrador
+
+A migracao adiciona `Perfil` com valor ALUNO a todos os usuarios existentes,
+sem apagar dados. Usuarios de demonstracao antigos tambem precisarao de promocao.
+Execute na raiz do projeto:
+
+```powershell
+docker compose up --build -d
+```
+
+Crie sua conta na tela de acesso (ou use uma conta existente). Depois execute,
+substituindo o email pelo mesmo usado no cadastro:
+
+```powershell
+Get-Content -Raw scripts/promover-admin.sql | docker compose exec -T postgres psql -U plataforma -d plataforma_cursos -v "email=seu-email@example.com"
+```
+
+O comando deve mostrar `UPDATE 1` e o perfil ADMINISTRADOR. `UPDATE 0` indica
+que nao encontrou o email. Recarregue a pagina ou entre novamente. Na area
+administrativa, promova os instrutores e outros administradores. A propria
+conta administrativa nao pode ser rebaixada nem excluida pela API.
+
+Os arquivos foram preparados, mas builds, migracoes e testes nao foram executados.
+Veja [scripts/README.md](scripts/README.md) para os testes de permissoes e a carga.
 
 Para desenvolver o frontend com a API do Compose em execucao:
 
@@ -89,7 +132,7 @@ durante a preparacao. Depois de subir os servicos:
 Invoke-WebRequest http://localhost:3000/
 Invoke-WebRequest http://localhost:3000/api
 Invoke-WebRequest http://localhost:8080/
-Invoke-WebRequest http://localhost:8080/backend/curso
+# As rotas de dados agora exigem Bearer token; sem token retornam 401.
 docker compose exec api ./node_modules/.bin/prisma migrate status
 ```
 
@@ -121,8 +164,11 @@ Os scripts compartilhados ficam em [`scripts/`](scripts/README.md):
 - `popular-banco.mjs`: adiciona dados de demonstracao nas 14 tabelas pela API.
 - `testar-endpoints.mjs`: verifica os endpoints e tenta remover os dados de teste.
 - `limpar-dados.sql`: apaga todos os registros das tabelas da aplicacao.
+- `promover-admin.sql`: promove uma conta existente pelo email, via psql.
+- `testar-permissoes.mjs`: confere perfis, escopos e tentativas de acesso indevido.
 
-Com a API em execucao, execute da raiz (Node.js 20+):
+Com a API em execucao e `ADMIN_TOKEN` configurado conforme o README dos scripts,
+execute da raiz (Node.js 20+):
 
 ```powershell
 node scripts/popular-banco.mjs
