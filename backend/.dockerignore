@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.env
+.env.*
+tmp
+docs
+src/generated/prisma
+*.tsbuildinfo
