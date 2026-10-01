@@ -64,15 +64,26 @@ Sem Node instalado no host, use o Node do container da API, a partir da raiz:
 Get-Content -Raw scripts/popular-banco.mjs | docker compose exec -T -e "ADMIN_TOKEN=$env:ADMIN_TOKEN" api node --input-type=module
 ```
 
-A carga usa a API NestJS, que gera os hashes das senhas e os IDs. Cria 28
-registros distribuidos pelas 14 tabelas: dois usuarios, categoria, dois cursos,
-dois modulos, seis aulas, duas matriculas, quatro progressos, duas avaliacoes,
-trilha, dois vinculos de cursos, certificado, plano, assinatura e pagamento.
-O primeiro curso fica concluido e o segundo parcialmente concluido.
-URLs de aulas e transacao financeira sao ficticias; nao ha cobranca real.
+A carga usa a API NestJS, que gera os hashes das senhas e os IDs. Cria:
 
-O terminal mostra os emails e uma senha aleatoria para entrar no frontend.
-O usuario instrutor e promovido pelo administrador usado na carga; o outro e aluno.
+- 10 alunos, 3 instrutores e 2 novos administradores (15 contas novas).
+- 4 cursos: HTML e CSS, JavaScript, React e NestJS, distribuidos entre os instrutores.
+- 3 modulos por curso, com 3 aulas por modulo: video (20 min), texto (25 min)
+  e quiz (15 min). Cada curso tem 9 aulas e 3 horas: 12 modulos e 36 aulas no total.
+- 40 matriculas (cada aluno nos quatro cursos), 243 progressos e 40 avaliacoes.
+- 14 certificados, somente para as matriculas com todas as aulas concluidas.
+- Categoria, trilha com os quatro cursos, plano, 10 assinaturas e 10 pagamentos.
+
+Sao 431 registros nas 14 tabelas por execucao completa. Cada curso tem alunos
+com progresso completo, de um modulo ou de dois modulos. "Cursos completos"
+significa estrutura preenchida de modulos e aulas; os links de video, texto e
+quiz sao exemplos ficticios, sem material didatico hospedado. As transacoes
+financeiras tambem sao ficticias, sem cobranca real.
+
+O terminal mostra o email e uma senha aleatoria individual de cada conta,
+seguido de uma tabela com os perfis ao terminar. Os instrutores e os dois novos
+administradores sao promovidos usando ADMIN_TOKEN. O administrador usado para
+executar o script nao entra na contagem de contas criadas e nao e alterado.
 Cada execucao adiciona um conjunto novo, identificado por UUID nos nomes e
 emails. Nao e idempotente: repetir adiciona dados. Nao apaga nem altera dados
 preexistentes, nao presume IDs fixos e nao executa o script de limpeza.

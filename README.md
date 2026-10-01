@@ -161,7 +161,8 @@ Confira tambem [o roteiro de validacao do frontend](frontend/VALIDACAO.md).
 
 Os scripts compartilhados ficam em [`scripts/`](scripts/README.md):
 
-- `popular-banco.mjs`: adiciona dados de demonstracao nas 14 tabelas pela API.
+- `popular-banco.mjs`: adiciona 4 cursos com modulos/aulas, 10 alunos,
+  3 instrutores, 2 novos administradores e dados relacionados nas 14 tabelas.
 - `testar-endpoints.mjs`: verifica os endpoints e tenta remover os dados de teste.
 - `limpar-dados.sql`: apaga todos os registros das tabelas da aplicacao.
 - `promover-admin.sql`: promove uma conta existente pelo email, via psql.
