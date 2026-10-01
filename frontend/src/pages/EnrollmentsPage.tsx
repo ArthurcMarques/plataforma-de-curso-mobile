@@ -24,6 +24,7 @@ export function EnrollmentsPage({ data, addWithId, updateById, removeById, notif
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveEnrollment(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         // Um usuario nao deve se matricular duas vezes no mesmo curso.

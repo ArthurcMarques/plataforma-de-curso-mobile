@@ -33,6 +33,7 @@ if (argument !== '--database-worker') {
 
 const now = new Date().toISOString();
 const later = new Date(Date.now() + 30 * 86400000).toISOString();
+// Rastreia os registros inseridos para diagnóstico; a carga não usa transação global nem desfaz inserções.
 const created = [];
 let reusedAccounts = 0;
 let prisma;

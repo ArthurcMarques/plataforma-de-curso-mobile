@@ -1,9 +1,11 @@
+// Reúne catálogo, estudo dos cursos matriculados e consulta dos certificados do aluno.
 import { useState } from "react";
 import { useSession } from "../auth/session";
 import { PageHeader } from "../components/PageHeader";
 import type { PageProps } from "./pageTypes";
 import { sameId } from "../utils";
 
+// Aceita apenas links HTTP/HTTPS para os conteúdos cadastrados, descartando outros protocolos.
 function contentUrl(value: string) {
     try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) ? url.href : undefined; }
     catch { return undefined; }
@@ -18,6 +20,7 @@ export function StudentArea({ data, addDirect, removeDirect, refreshData, notify
         try {
             if (await addDirect("matriculas", { idUsuario: user.userId, idCurso })) {
                 notify("Matrícula realizada.");
+                // Após a matrícula, recarrega também os módulos e aulas que a API passou a liberar ao aluno.
                 await refreshData();
             }
         } finally { setBusy(false); }

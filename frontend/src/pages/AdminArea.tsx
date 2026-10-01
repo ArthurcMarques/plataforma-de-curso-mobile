@@ -1,3 +1,4 @@
+// Área administrativa com visão geral e ações de gestão de perfis.
 import { useState } from "react";
 import { profileNames, useSession } from "../auth/session";
 import type { Perfil } from "../auth/session";

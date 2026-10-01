@@ -23,6 +23,7 @@ async function create(route, key, body, token = admin) {
   cleanup.push(`/${route}/${row[key]}`);
   return row;
 }
+// Cria uma conta como aluno e promove via administrador, verificando o perfil com o token já emitido.
 async function account(label, perfil) {
   const email = `${label}.${suffix}@example.com`;
   const password = `Teste-${suffix}`;
@@ -88,6 +89,7 @@ try {
   console.error(error.message);
   process.exitCode = 1;
 } finally {
+  // Remove primeiro os registros dependentes para respeitar as chaves estrangeiras.
   for (const path of cleanup.reverse()) {
     try { await call('DELETE', path, 200); }
     catch (error) { console.error(`Falha na limpeza ${path}: ${error.message}`); process.exitCode = 1; }

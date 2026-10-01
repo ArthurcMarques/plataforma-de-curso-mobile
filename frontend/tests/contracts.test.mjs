@@ -1,3 +1,4 @@
+// Testes do adaptador HTTP sem servidor: verificam payloads, normalização e identificação dos registros.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { contracts, fromApi, toApi, recordPath } from "../src/services/contracts.ts";

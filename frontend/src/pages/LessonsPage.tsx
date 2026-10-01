@@ -37,6 +37,7 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveLesson(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (saving) return;

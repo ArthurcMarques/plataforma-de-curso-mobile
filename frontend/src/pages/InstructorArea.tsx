@@ -1,3 +1,4 @@
+// Resumo dos cursos do instrutor e do progresso dos alunos nas suas turmas.
 import { Link } from "react-router-dom";
 import { useSession } from "../auth/session";
 import { PageHeader } from "../components/PageHeader";

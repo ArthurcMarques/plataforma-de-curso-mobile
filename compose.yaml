@@ -1,6 +1,7 @@
 name: plataforma-cursos
 
 services:
+  # Banco acessível pela rede interna do Compose; o volume mantém os dados entre recriações.
   postgres:
     image: postgres:17-bookworm
     environment:
@@ -15,6 +16,7 @@ services:
       timeout: 5s
       retries: 20
 
+  # Interface web local para administrar o PostgreSQL; não usa o login da aplicação.
   pgadmin:
     image: dpage/pgadmin4:9.17
     environment:
@@ -29,6 +31,7 @@ services:
       postgres:
         condition: service_healthy
 
+  # A API usa postgres como hostname interno e só inicia após o banco ficar saudável.
   api:
     build: ./backend
     environment:
@@ -48,6 +51,7 @@ services:
       retries: 12
       start_period: 30s
 
+  # Serve o bundle pelo Nginx e encaminha /backend para a API na rede interna.
   frontend:
     build: ./frontend
     ports:

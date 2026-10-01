@@ -6,6 +6,7 @@ export default defineConfig({
     plugins: [react()],
     server: {
         proxy: {
+            // No desenvolvimento, reproduz o mesmo prefixo de API usado pelo Nginx em produção.
             "/backend": {
                 target: "http://127.0.0.1:3000",
                 changeOrigin: true,

@@ -34,6 +34,7 @@ export function CoursesPage({ data, addDirect, updateById, removeById, notify }:
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveCourse(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (saving) return;

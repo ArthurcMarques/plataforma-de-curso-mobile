@@ -18,6 +18,7 @@ const later = new Date(Date.now() + 30 * 86400000).toISOString();
 const id = (route, key) => records[route][key];
 
 // Campos no JSON de entrada -> campos retornados pelo banco.
+// Cada cenário fornece cadastro, alteração e mapeamento esperado dos campos retornados.
 const scenarios = [
   { route: 'usuario', keys: ['ID_Usuario'],
     body: () => ({ name: 'Usuario teste', email: `${token}@example.com`, password: 'teste123' }),

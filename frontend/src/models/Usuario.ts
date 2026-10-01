@@ -3,6 +3,7 @@ import { z } from "zod";
 import { idSchema, textSchema, type RecordId } from "./common";
 
 export class Usuario {
+    // Valida a resposta já normalizada pelo adaptador HTTP antes de colocá-la no estado da aplicação.
     static schema = z.object({
         id: idSchema,
         nomeCompleto: textSchema,

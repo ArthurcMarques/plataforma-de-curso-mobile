@@ -23,6 +23,7 @@ import { InstructorArea } from "../pages/InstructorArea";
 import { AdminArea } from "../pages/AdminArea";
 import { MyAccountPage } from "../pages/MyAccountPage";
 
+// As rotas acompanham o perfil para orientar a interface; a autorização real permanece na API.
 export function AppRoutes(props: PageProps) {
     const user = useSession();
     const home = homePaths[user.perfil];

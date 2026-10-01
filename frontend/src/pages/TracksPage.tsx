@@ -25,6 +25,7 @@ export function TracksPage({ data, addWithId, addDirect, updateById, removeById,
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveTrack(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         // Salva uma trilha nova ou atualiza a trilha em edicao.

@@ -1,3 +1,4 @@
+// Adaptador entre o formato Prisma da API e os modelos da interface; concentra rotas, chaves e conversões.
 import type { CollectionName, RecordId } from "../models/types";
 type Row = Record<string, any>;
 type Contract = { route: string; keys: string[]; fields: string[] };
@@ -23,6 +24,7 @@ const enums: Record<string, Record<string, string>> = {
     status: { CONCLUIDO: "Concluído" },
     metodoPagamento: { PIX: "Pix", CARTAO: "Cartão", BOLETO: "Boleto" }
 };
+// Datas definidas pelo servidor são omitidas do envio; a data da avaliação é editável.
 const generatedDates = new Set(["dataCadastro", "dataMatricula", "dataEmissao"]);
 const numeric = new Set(["totalAulas", "totalHoras", "ordem", "duracaoMinutos", "nota", "preco", "duracaoMeses", "valorPago"]);
 function apiField(field: string) {
@@ -31,6 +33,7 @@ function apiField(field: string) {
     if (field.startsWith("id")) return `ID_${field.slice(2)}`;
     return field[0].toUpperCase() + field.slice(1);
 }
+// Normaliza nomes de campos, enums, datas e chaves compostas antes da validação dos modelos.
 export function fromApi(name: CollectionName, record: Row): Row {
     const contract = contracts[name];
     if (contract.keys.some(key => !Number.isInteger(record[key]) || record[key] <= 0)) {
@@ -47,6 +50,7 @@ export function fromApi(name: CollectionName, record: Row): Row {
     }
     return result;
 }
+// Envia apenas campos do contrato, converte IDs/números e serializa datas em ISO.
 export function toApi(name: CollectionName, record: Row): Row {
     if (name === "usuarios") return {
         ...(record.nomeCompleto !== undefined ? { name: record.nomeCompleto } : {}),
@@ -64,6 +68,7 @@ export function toApi(name: CollectionName, record: Row): Row {
     }
     return result;
 }
+// Transforma a chave composta da interface (ex.: 2:7) nos segmentos esperados pela rota.
 export function recordPath(name: CollectionName, id?: RecordId) {
     const contract = contracts[name];
     if (id === undefined) return `/${contract.route}`;

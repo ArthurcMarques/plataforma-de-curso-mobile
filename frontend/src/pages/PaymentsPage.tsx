@@ -25,6 +25,7 @@ export function PaymentsPage({ data, addWithId, updateById, removeById, notify }
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function savePayment(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         // O id da transacao evita pagamentos duplicados.

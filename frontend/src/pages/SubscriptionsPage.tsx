@@ -26,6 +26,7 @@ export function SubscriptionsPage({ data, addWithId, updateById, removeById, nav
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveSubscription(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         // Datas e IDs selecionados sao enviados para a API.

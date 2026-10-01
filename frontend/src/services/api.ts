@@ -9,6 +9,7 @@ type AnyRecord = Record<string, any>;
 
 // Proxy do Vite/Nginx. Pode ser trocado por VITE_API_URL.
 const API_URL = (import.meta.env.VITE_API_URL ?? "/backend").replace(/\/$/, "");
+// A sessão fica restrita à aba pelo sessionStorage; o token acompanha apenas chamadas autenticadas.
 const TOKEN_KEY = "plataforma-cursos.token";
 export const AUTH_EVENT = "plataforma-cursos:auth";
 export function getToken() { return sessionStorage.getItem(TOKEN_KEY); }

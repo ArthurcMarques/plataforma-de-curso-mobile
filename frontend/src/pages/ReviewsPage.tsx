@@ -11,6 +11,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
     const [saving, setSaving] = useState(false);
     const user = useSession();
     const isStudent = user.perfil === "ALUNO";
+    // Instrutores consultam avaliações de seus cursos; alunos gerenciam as próprias e administradores gerenciam todas.
     const readOnly = user.perfil === "INSTRUTOR";
     const courses = isStudent ? data.cursos.filter(course => data.matriculas.some(item => sameId(item.idCurso, course.id))) : data.cursos;
     const reviews = isStudent ? data.avaliacoes.filter(item => sameId(item.idUsuario, user.userId)) : data.avaliacoes;
@@ -35,6 +36,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveReview(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (saving || readOnly) return;

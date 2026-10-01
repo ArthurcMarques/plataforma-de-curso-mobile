@@ -17,6 +17,7 @@ export function CategoriesPage({ data, addWithId, updateById, removeById, notify
         setEditingId(null);
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveCategory(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         // Se editingId tiver valor, salva como edicao; senao, cria novo registro.

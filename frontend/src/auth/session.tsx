@@ -1,3 +1,4 @@
+// Contexto da identidade autenticada, nomes dos perfis e destinos iniciais de navegação.
 import { createContext, useContext } from "react";
 export type Perfil = "ALUNO" | "INSTRUTOR" | "ADMINISTRADOR";
 export interface SessionUser { userId: number; name: string; email: string; perfil: Perfil }

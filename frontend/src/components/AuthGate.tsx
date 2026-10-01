@@ -1,3 +1,4 @@
+// Controla login/cadastro e só libera a aplicação após confirmar a sessão na API.
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { AUTH_EVENT, getToken, getSession, login, logout, register } from "../services/api";
@@ -28,6 +29,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     }, []);
 
     useEffect(() => {
+        // Ignora respostas de uma sessão anterior se o token mudar ou o componente for desmontado.
         let cancelled = false;
         setUser(null);
         setSessionError("");
@@ -42,6 +44,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!token) return;
         let active = true;
+        // Reconsulta o perfil ao voltar à aba para refletir alterações feitas por outro administrador.
         const refresh = () => {
             void getSession().then(current => { if (active) setUser(current); }).catch(() => {
                 // Uma resposta 401 ja encerra a sessao na camada HTTP.

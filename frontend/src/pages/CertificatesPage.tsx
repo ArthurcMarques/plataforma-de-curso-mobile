@@ -33,6 +33,7 @@ export function CertificatesPage({ data, addDirect, updateById, removeById, noti
         });
     }
 
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function saveCertificate(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         // Editar certificado nao exige verificar progresso novamente.

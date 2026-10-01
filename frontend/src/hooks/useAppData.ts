@@ -79,6 +79,7 @@ export function useAppData() {
         }
     }
 
+    // Atualiza o estado com a resposta confirmada pelo servidor; erro mantém os dados anteriores.
     async function updateById(name: CollectionName, id: RecordId, patch: any) {
         try {
             const saved = await updateRecord(name, id, patch);

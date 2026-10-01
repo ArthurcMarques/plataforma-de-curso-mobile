@@ -1,3 +1,4 @@
+// Gerenciamento contextual do curso: abas e filtro de módulo são mantidos na URL.
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useSession } from "../auth/session";
 import { PageHeader } from "../components/PageHeader";
@@ -26,8 +27,10 @@ export function CourseDetailPage(props: PageProps) {
         .sort((a, b) => modules.findIndex(module => sameId(module.id, a.idModulo))
             - modules.findIndex(module => sameId(module.id, b.idModulo)) || a.ordem - b.ordem);
     const reviews = data.avaliacoes.filter(item => sameId(item.idCurso, course.id));
+    // Reutiliza os formulários com coleções restritas ao curso, preservando os callbacks do estado global.
     const scopedData = { ...data, cursos: [course], modulos: modules, aulas: lessons, avaliacoes: reviews };
     const summary = courseSummary(scopedData, course);
+    // A URL preserva aba e módulo ao recarregar a página ou navegar pelo histórico.
     const selectedModule = search.get("modulo") ?? "";
     const module = modules.find(item => sameId(item.id, selectedModule));
     const tab = ["modulos", "aulas", "avaliacoes"].includes(search.get("aba") ?? "") ? search.get("aba")! : "modulos";

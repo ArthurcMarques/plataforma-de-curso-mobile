@@ -1,3 +1,4 @@
+// Edição dos dados da própria conta; senha vazia preserva a credencial atual.
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { PROFILE_UPDATED, profileNames, useSession } from "../auth/session";
@@ -11,6 +12,7 @@ export function MyAccountPage({ updateById, notify }: PageProps) {
     const [password, setPassword] = useState("");
     const [confirmation, setConfirmation] = useState("");
     const [busy, setBusy] = useState(false);
+    // Compartilha o formulário entre criação e edição; mantém os valores quando a API rejeita o envio.
     async function save(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (!name.trim()) { notify("Informe seu nome.", "danger"); return; }

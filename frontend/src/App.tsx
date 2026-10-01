@@ -7,6 +7,7 @@ import { sectionsForProfile } from "./router/routes";
 import { AuthGate } from "./components/AuthGate";
 import { useSession } from "./auth/session";
 
+// Ponto de composição da aplicação: conecta sessão, layout e navegação.
 export function App() {
     return <AuthGate><AuthenticatedApp /></AuthGate>;
 }
