@@ -1,4 +1,4 @@
-// Camada de acesso ao JSON Server.
+// Camada de acesso a API NestJS.
 // As paginas chamam estas funcoes indiretamente pelo hook useAppData.
 import type { AppData, CollectionName, RecordId } from "../models/types";
 import { modelSchemas } from "../models/types";
@@ -6,7 +6,7 @@ import { fromApi, toApi, recordPath } from "./contracts";
 
 type AnyRecord = Record<string, any>;
 
-// URL base do JSON Server. Pode ser trocada por VITE_API_URL.
+// Proxy do Vite/Nginx. Pode ser trocado por VITE_API_URL.
 const API_URL = (import.meta.env.VITE_API_URL ?? "/backend").replace(/\/$/, "");
 const TOKEN_KEY = "plataforma-cursos.token";
 export const AUTH_EVENT = "plataforma-cursos:auth";
@@ -27,7 +27,7 @@ export async function register(name: string, email: string, password: string) {
     await request("/usuario", { method: "POST", body: JSON.stringify({ name, email, password }) }, false);
 }
 
-// Colecoes expostas no db.json.
+// Colecoes da interface mapeadas para os recursos NestJS.
 export const collections: CollectionName[] = [
     "usuarios",
     "categorias",

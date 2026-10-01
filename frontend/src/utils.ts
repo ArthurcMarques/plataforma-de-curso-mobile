@@ -11,7 +11,7 @@ export function normalize(value: unknown) {
     return String(value ?? "").trim().toLowerCase();
 }
 
-// Compara ids mesmo quando o JSON Server devolve strings.
+// Compara IDs numericos e chaves compostas representadas como strings.
 export function sameId(left: unknown, right: unknown) {
     return String(left ?? "") === String(right ?? "");
 }

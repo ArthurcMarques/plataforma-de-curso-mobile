@@ -1,5 +1,11 @@
 # Plataforma de Cursos Online
 
+> Atualizacao: o frontend agora consome a API NestJS, com cadastro e login.
+> Use `npm ci` e `npm run dev`, mantendo a API na porta 3000. O proxy do
+> Vite encaminha `/backend` para a API. Consulte o [README do monorepo](../README.md)
+> e o [roteiro de validacao](VALIDACAO.md). As instrucoes de JSON Server abaixo
+> sao historicas e nao representam mais a fonte de dados da interface.
+
 Projeto acadêmico da disciplina de Tecnologias de Construção de Software.
 
 Documentação base do professor:

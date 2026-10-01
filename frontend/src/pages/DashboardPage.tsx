@@ -3,7 +3,7 @@ import type { PageProps } from "./pageTypes";
 
 // Pagina inicial com atalhos para as principais secoes.
 export function DashboardPage({ data, navigate }: PageProps) {
-    // Cards calculados a partir dos dados carregados do JSON Server.
+    // Cards calculados a partir dos dados carregados da API.
     const cards = [
         { title: "Cursos", value: data.cursos.length, section: "cursos" },
         { title: "Usuários", value: data.usuarios.length, section: "usuarios" },

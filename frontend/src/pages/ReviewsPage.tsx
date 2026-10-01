@@ -47,7 +47,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate 
             return;
         }
 
-        await addWithId("avaliacoes", review);
+        if (!await addWithId("avaliacoes", review)) return;
         clearForm();
     }
 
@@ -90,7 +90,8 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate 
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Data</label>
-                        <input className="form-control" type="date" value={dataAvaliacao} required onChange={(event) => setDataAvaliacao(event.target.value)} />
+                        <input className="form-control" type="date" value={editingId === null ? "" : dataAvaliacao} readOnly />
+                        <small>Definida automaticamente no cadastro.</small>
                     </div>
                     <div className="col-12">
                         <label className="form-label">Comentario</label>

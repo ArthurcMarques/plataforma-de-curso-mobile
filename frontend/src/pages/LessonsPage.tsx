@@ -65,7 +65,7 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
             return;
         }
 
-        await addWithId("aulas", lesson);
+        if (!await addWithId("aulas", lesson)) return;
         clearForm();
     }
 

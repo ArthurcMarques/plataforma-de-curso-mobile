@@ -60,7 +60,8 @@ export function CertificatesPage({ data, addDirect, updateById, removeById, noti
             return;
         }
 
-        await addDirect("certificados", { idUsuario: userId, idCurso: courseId, idTrilha: null, codigoVerificacao: `CERT-${Date.now()}`, dataEmissao });
+        const saved = await addDirect("certificados", { idUsuario: userId, idCurso: courseId, idTrilha: null, codigoVerificacao: `CERT-${Date.now()}` });
+        if (!saved) return;
         notify("Certificado gerado com sucesso.");
         clearForm();
     }
@@ -95,7 +96,8 @@ export function CertificatesPage({ data, addDirect, updateById, removeById, noti
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Data de emissao</label>
-                        <input className="form-control" type="date" value={dataEmissao} required onChange={(event) => setDataEmissao(event.target.value)} />
+                        <input className="form-control" type="date" value={editingId === null ? "" : dataEmissao} readOnly />
+                        <small>Definida automaticamente na emissão.</small>
                     </div>
                     <div className="col-12 d-flex gap-2">
                         <button className="btn btn-primary" type="submit">{editingId !== null ? "Salvar alteracoes" : "Salvar"}</button>

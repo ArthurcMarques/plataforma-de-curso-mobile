@@ -47,7 +47,7 @@ export function EnrollmentsPage({ data, addWithId, updateById, removeById, notif
             return;
         }
 
-        await addWithId("matriculas", { ...enrollment, dataConclusao: null });
+        if (!await addWithId("matriculas", { ...enrollment, dataConclusao: null })) return;
         clearForm();
     }
 
@@ -81,7 +81,8 @@ export function EnrollmentsPage({ data, addWithId, updateById, removeById, notif
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Data</label>
-                        <input className="form-control" type="date" value={dataMatricula} required onChange={(event) => setDataMatricula(event.target.value)} />
+                        <input className="form-control" type="date" value={editingId === null ? "" : dataMatricula} readOnly />
+                        <small>Definida automaticamente no cadastro.</small>
                     </div>
                     <div className="col-12 d-flex gap-2">
                         <button className="btn btn-primary" type="submit">{editingId !== null ? "Salvar alteracoes" : "Salvar"}</button>

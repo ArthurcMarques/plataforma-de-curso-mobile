@@ -17,7 +17,7 @@ export function useAppData() {
         void refreshData();
     }, []);
 
-    // Carrega todas as colecoes do JSON Server.
+    // Carrega todas as colecoes da API.
     async function refreshData() {
         setLoading(true);
         try {
@@ -40,6 +40,7 @@ export function useAppData() {
         if (saved) {
             notify("Registro salvo com sucesso.");
         }
+        return Boolean(saved);
     }
 
     async function addDirect(name: CollectionName, record: any) {
@@ -65,16 +66,14 @@ export function useAppData() {
     }
 
     async function removeDirect(name: CollectionName, id: RecordId) {
-        // Remove da tela primeiro e restaura se o servidor falhar.
-        const previousList = data[name] as any[];
-        const updated = (previousList as WithId[]).filter((item) => String(item.id) !== String(id));
-        setData((current) => ({ ...current, [name]: updated }));
-
         try {
             await deleteRecord(name, id);
+            setData(current => ({
+                ...current,
+                [name]: (current[name] as WithId[]).filter(item => String(item.id) !== String(id))
+            }));
             return true;
         } catch (error) {
-            setData((current) => ({ ...current, [name]: previousList }));
             notify(error instanceof Error ? error.message : "Não foi possível remover o registro.", "danger");
             return false;
         }

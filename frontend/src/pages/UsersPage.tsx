@@ -42,7 +42,7 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
             return;
         }
 
-        await addWithId("usuarios", user);
+        if (!await addWithId("usuarios", user)) return;
         clearForm();
     }
 

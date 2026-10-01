@@ -40,7 +40,7 @@ export function PlansPage({ data, addWithId, updateById, removeById, notify, nav
             return;
         }
 
-        await addWithId("planos", plan);
+        if (!await addWithId("planos", plan)) return;
         clearForm();
     }
 

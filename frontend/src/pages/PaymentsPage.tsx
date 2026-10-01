@@ -53,7 +53,7 @@ export function PaymentsPage({ data, addWithId, updateById, removeById, notify }
             return;
         }
 
-        await addWithId("pagamentos", payment);
+        if (!await addWithId("pagamentos", payment)) return;
         clearForm();
     }
 

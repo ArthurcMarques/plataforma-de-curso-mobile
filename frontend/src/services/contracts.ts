@@ -33,6 +33,9 @@ function apiField(field: string) {
 }
 export function fromApi(name: CollectionName, record: Row): Row {
     const contract = contracts[name];
+    if (contract.keys.some(key => !Number.isInteger(record[key]) || record[key] <= 0)) {
+        throw new Error(`A API retornou um identificador inválido para ${name}.`);
+    }
     const result: Row = { id: contract.keys.length === 1 ? record[contract.keys[0]] : contract.keys.map(key => record[key]).join(":") };
     for (const field of contract.fields) {
         let value = record[apiField(field)];

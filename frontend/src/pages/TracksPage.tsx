@@ -38,7 +38,7 @@ export function TracksPage({ data, addWithId, addDirect, updateById, removeById,
             return;
         }
 
-        await addWithId("trilhas", track);
+        if (!await addWithId("trilhas", track)) return;
         clearForm();
     }
 
@@ -59,7 +59,8 @@ export function TracksPage({ data, addWithId, addDirect, updateById, removeById,
             notify("Esse curso ja esta vinculado a essa trilha.", "danger");
             return;
         }
-        await addDirect("trilhasCursos", { idTrilha, idCurso, ordem: Number(linkForm.ordem) });
+        const saved = await addDirect("trilhasCursos", { idTrilha, idCurso, ordem: Number(linkForm.ordem) });
+        if (!saved) return;
         setLinkForm({ idTrilha: "", idCurso: "", ordem: "" });
         notify("Curso vinculado a trilha.");
     }

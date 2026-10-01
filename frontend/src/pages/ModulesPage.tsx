@@ -43,7 +43,7 @@ export function ModulesPage({ data, addWithId, updateById, removeById, notify, n
             return;
         }
 
-        await addWithId("modulos", module);
+        if (!await addWithId("modulos", module)) return;
         clearForm();
     }
 

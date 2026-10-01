@@ -54,7 +54,7 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
             return;
         }
 
-        await addWithId("cursos", { ...course, totalAulas: 0, totalHoras: 0 });
+        if (!await addWithId("cursos", { ...course, totalAulas: 0, totalHoras: 0 })) return;
         clearForm();
     }
 

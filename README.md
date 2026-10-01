@@ -49,24 +49,36 @@ As portas externas podem ser alteradas no `.env`.
 
 ## Estado da integracao funcional
 
-Este trabalho unifica o repositorio e a infraestrutura. O frontend original
-ainda tem contrato de JSON Server; a integracao dos CRUDs com NestJS esta
-pendente. No Docker, `VITE_API_URL=/backend` aponta para a API real, mas a
-interface exibira erro ao carregar as colecoes enquanto esses contratos
-nao forem adaptados. Exemplos conferidos nos fontes:
+O frontend consome as 14 colecoes do NestJS por `/backend`. A camada em
+`frontend/src/services/contracts.ts` converte rotas, nomes de campos,
+enums, IDs numericos, decimais e datas. Progresso e vinculos de trilhas usam
+chaves compostas, convertidas em dois segmentos nas rotas de alteracao/exclusao.
 
-- O frontend pede `/usuarios` e `/cursos`; o backend oferece `/usuario`
-  e `/curso` (tambem ha diferencas nas outras colecoes).
-- O frontend espera `id` e `nomeCompleto`; a API retorna `ID_Usuario`
-  e `NomeCompleto`. Enums e outros campos tambem diferem.
-- A listagem de usuarios exige JWT. O frontend ainda nao tem fluxo de
-  login nem envio de Bearer token.
-- O modelo de usuario do frontend exige `senha`; a API corretamente nao
-  devolve senhas. Esse campo precisa sair do contrato de leitura.
+Ao abrir a interface, use **Criar uma conta** para cadastrar o primeiro
+usuario e depois entre com e-mail e senha. O JWT fica em `sessionStorage`
+e acompanha as chamadas como Bearer token. Sair ou receber HTTP 401 remove
+a sessao e retorna ao acesso. A API define a expiracao do token em uma hora.
+
+Senhas sao apenas entradas de cadastro/alteracao, nunca dados de leitura.
+Na edicao de usuario, senha vazia preserva a senha existente. Como a API nao
+possui tipo de usuario, qualquer usuario pode ser selecionado como instrutor.
+Datas de cadastro, matricula, avaliacao e emissao sao geradas pelo backend
+e aparecem como somente leitura nos formularios.
 
 O JSON Server nao e um servico do Compose. O script legado `npm run server`
 e `db.json` foram preservados para referencia. O README de cada projeto
-tambem preserva as instrucoes anteriores; este README descreve o Compose.
+do backend preserva as instrucoes anteriores; este README descreve o Compose.
+
+Para desenvolver o frontend com a API do Compose em execucao:
+
+```powershell
+cd frontend
+npm ci
+npm run dev
+```
+
+O proxy do Vite encaminha `/backend` para `http://127.0.0.1:3000`.
+Se mudar `API_PORT`, ajuste o destino em `frontend/vite.config.ts`.
 
 ## Validacao a executar
 
@@ -97,6 +109,8 @@ cd ..
 
 Os testes existentes podem precisar de mocks/configuracao de banco;
 nao foram reescritos neste trabalho.
+
+Confira tambem [o roteiro de validacao do frontend](frontend/VALIDACAO.md).
 
 ## Operacao
 

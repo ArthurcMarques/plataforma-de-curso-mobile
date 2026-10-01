@@ -36,7 +36,7 @@ export function CategoriesPage({ data, addWithId, updateById, removeById, notify
             return;
         }
 
-        await addWithId("categorias", { nome: trimmedName, descricao: descricao.trim() });
+        if (!await addWithId("categorias", { nome: trimmedName, descricao: descricao.trim() })) return;
         clearForm();
     }
 

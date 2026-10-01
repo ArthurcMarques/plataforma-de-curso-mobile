@@ -48,7 +48,7 @@ export const modelSchemas = {
     pagamentos: Pagamento.schema
 };
 
-// Estrutura completa carregada do JSON Server.
+// Estrutura completa normalizada a partir da API.
 export interface AppData {
     usuarios: Usuario[];
     categorias: Categoria[];

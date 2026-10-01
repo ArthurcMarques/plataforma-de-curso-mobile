@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AppContent } from "./components/AppContent";
 import { Layout } from "./components/Layout";
 import { sections } from "./router/routes";
+import { AuthGate } from "./components/AuthGate";
 
 export function App() {
     const location = useLocation();
@@ -16,8 +17,8 @@ export function App() {
     }
 
     return (
-        <Layout sections={sections} currentPath={location.pathname} onNavigate={navigate}>
+        <AuthGate><Layout sections={sections} currentPath={location.pathname} onNavigate={navigate}>
             <AppContent navigateToSection={navigateToSection} />
-        </Layout>
+        </Layout></AuthGate>
     );
 }
