@@ -23,6 +23,7 @@ model Usuario {
   Email        String   @unique
   SenhaHash    String
   DataCadastro DateTime @default(now())
+  Perfil       PerfilUsuario @default(ALUNO)
 
   cursos       Curso[]
   matriculas   Matricula[]
@@ -262,6 +263,12 @@ enum NivelCurso {
   INICIANTE
   INTERMEDIARIO
   AVANCADO
+}
+
+enum PerfilUsuario {
+  ALUNO
+  INSTRUTOR
+  ADMINISTRADOR
 }
 
 enum TipoConteudo {

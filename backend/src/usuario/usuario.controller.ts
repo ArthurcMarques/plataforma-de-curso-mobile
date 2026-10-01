@@ -3,6 +3,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import { UpdatePerfilDto } from './dto/update-perfil.dto';
+import { Public } from '../auth/public.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('usuario')
@@ -11,11 +13,17 @@ export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
   @Post()
+  @Public()
   @ApiOperation({ summary: 'Criar um novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
+  }
+
+  @Patch(':id/perfil')
+  updatePerfil(@Param('id') id: string, @Body() dto: UpdatePerfilDto) {
+    return this.usuarioService.updatePerfil(+id, dto.perfil);
   }
 
   @ApiBearerAuth('token')

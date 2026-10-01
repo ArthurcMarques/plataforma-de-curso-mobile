@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import * as bcrypt from 'bcrypt';
+import { PerfilUsuario } from '../generated/prisma/enums';
 
 @Injectable()
 export class UsuarioService {
@@ -17,6 +18,7 @@ export class UsuarioService {
         NomeCompleto: createUsuarioDto.name,
         Email: createUsuarioDto.email,
         SenhaHash: hash,
+        Perfil: 'ALUNO',
       },
       omit: { SenhaHash: true },
     });
@@ -25,6 +27,12 @@ export class UsuarioService {
   async findByEmail(email: string) {
     return this.prisma.usuario.findUnique({
       where: { Email: email },
+    });
+  }
+
+  updatePerfil(id: number, perfil: PerfilUsuario) {
+    return this.prisma.usuario.update({
+      where: { ID_Usuario: id }, data: { Perfil: perfil }, omit: { SenhaHash: true },
     });
   }
 
