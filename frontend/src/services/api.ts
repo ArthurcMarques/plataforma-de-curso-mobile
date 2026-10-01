@@ -2,11 +2,30 @@
 // As paginas chamam estas funcoes indiretamente pelo hook useAppData.
 import type { AppData, CollectionName, RecordId } from "../models/types";
 import { modelSchemas } from "../models/types";
+import { fromApi, toApi, recordPath } from "./contracts";
 
 type AnyRecord = Record<string, any>;
 
 // URL base do JSON Server. Pode ser trocada por VITE_API_URL.
-const API_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3001").replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_API_URL ?? "/backend").replace(/\/$/, "");
+const TOKEN_KEY = "plataforma-cursos.token";
+export const AUTH_EVENT = "plataforma-cursos:auth";
+export function getToken() { return sessionStorage.getItem(TOKEN_KEY); }
+export function logout() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    window.dispatchEvent(new Event(AUTH_EVENT));
+}
+export async function login(email: string, password: string) {
+    const result = await request<{ access_token: string }>("/auth/login", {
+        method: "POST", body: JSON.stringify({ email, password })
+    }, false);
+    if (!result.access_token) throw new Error("A API não retornou um token.");
+    sessionStorage.setItem(TOKEN_KEY, result.access_token);
+    window.dispatchEvent(new Event(AUTH_EVENT));
+}
+export async function register(name: string, email: string, password: string) {
+    await request("/usuario", { method: "POST", body: JSON.stringify({ name, email, password }) }, false);
+}
 
 // Colecoes expostas no db.json.
 export const collections: CollectionName[] = [
@@ -35,16 +54,16 @@ export async function fetchAppData(): Promise<AppData> {
     const data = emptyAppData();
 
     for (const name of collections) {
-        (data as any)[name] = validateCollection(name, await request<any[]>(`/${name}`));
+        (data as any)[name] = validateCollection(name, await request<any[]>(recordPath(name)));
     }
 
     return data;
 }
 
 export async function createRecord(name: CollectionName, record: AnyRecord): Promise<AnyRecord> {
-    const saved = await request<AnyRecord>(`/${name}`, {
+    const saved = await request<AnyRecord>(recordPath(name), {
         method: "POST",
-        body: JSON.stringify(record)
+        body: JSON.stringify(toApi(name, record))
     });
 
     return validateRecord(name, saved);
@@ -55,27 +74,39 @@ export async function updateRecord(
     id: RecordId,
     patch: AnyRecord
 ): Promise<AnyRecord> {
-    const saved = await request<AnyRecord>(`/${name}/${id}`, {
+    const saved = await request<AnyRecord>(recordPath(name, id), {
         method: "PATCH",
-        body: JSON.stringify(patch)
+        body: JSON.stringify(toApi(name, patch))
     });
 
     return validateRecord(name, saved);
 }
 
 export async function deleteRecord(name: CollectionName, id: RecordId): Promise<void> {
-    await request<void>(`/${name}/${id}`, { method: "DELETE" });
+    await request<void>(recordPath(name, id), { method: "DELETE" });
 }
 
 // Wrapper simples para padronizar chamadas HTTP.
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await fetch(`${API_URL}${path}`, {
-        headers: { "Content-Type": "application/json" },
-        ...init
-    });
+async function request<T>(path: string, init?: RequestInit, authenticated = true): Promise<T> {
+    const headers = new Headers(init?.headers);
+    headers.set("Content-Type", "application/json");
+    const token = authenticated ? getToken() : null;
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    let response: Response;
+    try {
+        response = await fetch(`${API_URL}${path}`, { ...init, headers });
+    } catch {
+        throw new Error("Não foi possível conectar à API. Tente novamente.");
+    }
 
     if (!response.ok) {
-        throw new Error(`Erro ${response.status} ao acessar ${path}`);
+        if (response.status === 401 && authenticated) {
+            logout();
+            throw new Error("Sessão expirada. Entre novamente.");
+        }
+        const body = await response.json().catch(() => ({}));
+        const message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
+        throw new Error(typeof message === "string" ? message : `Erro ${response.status} ao acessar ${path}`);
     }
 
     if (response.status === 204) {
@@ -91,5 +122,7 @@ function validateCollection(name: CollectionName, records: AnyRecord[]) {
 }
 
 function validateRecord(name: CollectionName, record: AnyRecord) {
-    return modelSchemas[name].parse(record);
+    const result = modelSchemas[name].safeParse(fromApi(name, record));
+    if (!result.success) throw new Error(`A API retornou dados incompatíveis para ${name}.`);
+    return result.data;
 }

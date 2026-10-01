@@ -8,7 +8,7 @@ import type { PageProps } from "./pageTypes";
 import { ActionButton, courseSummary, SimpleTable } from "./shared";
 
 export function CoursesPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
-    const instructors = data.usuarios.filter((user) => user.tipoUsuario === "Instrutor");
+    const instructors = data.usuarios;
     const rows = data.cursos.map((course) => courseSummary(data, course));
     const [titulo, setTitulo] = useState("");
     const [descricao, setDescricao] = useState("");

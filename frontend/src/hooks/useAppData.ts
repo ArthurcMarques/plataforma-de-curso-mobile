@@ -23,8 +23,8 @@ export function useAppData() {
         try {
             setData(await fetchAppData());
             setError(null);
-        } catch {
-            setError("Nao foi possivel carregar os dados. Verifique se o JSON Server esta rodando.");
+        } catch (error) {
+            setError(error instanceof Error ? error.message : "Não foi possível carregar os dados da API.");
         } finally {
             setLoading(false);
         }
@@ -47,8 +47,8 @@ export function useAppData() {
             const saved = await createRecord(name, record);
             setData((current) => ({ ...current, [name]: [...current[name], saved] }));
             return saved;
-        } catch {
-            notify("Nao foi possivel salvar o registro no servidor.", "danger");
+        } catch (error) {
+            notify(error instanceof Error ? error.message : "Não foi possível salvar o registro.", "danger");
             return null;
         }
     }
@@ -67,15 +67,15 @@ export function useAppData() {
     async function removeDirect(name: CollectionName, id: RecordId) {
         // Remove da tela primeiro e restaura se o servidor falhar.
         const previousList = data[name] as any[];
-        const updated = (previousList as WithId[]).filter((item) => Number(item.id) !== Number(id));
+        const updated = (previousList as WithId[]).filter((item) => String(item.id) !== String(id));
         setData((current) => ({ ...current, [name]: updated }));
 
         try {
             await deleteRecord(name, id);
             return true;
-        } catch {
+        } catch (error) {
             setData((current) => ({ ...current, [name]: previousList }));
-            notify("Nao foi possivel remover o registro no servidor.", "danger");
+            notify(error instanceof Error ? error.message : "Não foi possível remover o registro.", "danger");
             return false;
         }
     }
@@ -86,13 +86,13 @@ export function useAppData() {
             setData((current) => ({
                 ...current,
                 [name]: (current[name] as unknown as WithId[]).map((item) => {
-                    return Number(item.id) === Number(id) ? saved : item;
+                    return String(item.id) === String(id) ? saved : item;
                 })
             }));
             notify("Registro atualizado com sucesso.");
             return true;
-        } catch {
-            notify("Nao foi possivel atualizar o registro no servidor.", "danger");
+        } catch (error) {
+            notify(error instanceof Error ? error.message : "Não foi possível atualizar o registro.", "danger");
             return false;
         }
     }

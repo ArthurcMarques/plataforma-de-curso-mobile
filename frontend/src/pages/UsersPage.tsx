@@ -12,7 +12,6 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [dataCadastro, setDataCadastro] = useState(todayISO());
-    const [tipoUsuario, setTipoUsuario] = useState<Usuario["tipoUsuario"]>("Aluno");
     const [editingId, setEditingId] = useState<string | number | null>(null);
 
     function clearForm() {
@@ -20,7 +19,6 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
         setEmail("");
         setSenha("");
         setDataCadastro(todayISO());
-        setTipoUsuario("Aluno");
         setEditingId(null);
     }
 
@@ -35,7 +33,7 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
             return;
         }
 
-        const user = { nomeCompleto: nomeCompleto.trim(), email: normalizedEmail, senha, dataCadastro, tipoUsuario };
+        const user = { nomeCompleto: nomeCompleto.trim(), email: normalizedEmail, senha };
         if (editingId !== null) {
             const updated = await updateById("usuarios", editingId, user);
             if (updated) {
@@ -53,9 +51,8 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
         setEditingId(user.id);
         setNomeCompleto(user.nomeCompleto);
         setEmail(user.email);
-        setSenha(user.senha);
+        setSenha("");
         setDataCadastro(user.dataCadastro);
-        setTipoUsuario(user.tipoUsuario);
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -75,18 +72,13 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Senha</label>
-                        <input className="form-control" type="password" value={senha} required onChange={(event) => setSenha(event.target.value)} />
+                        <input className="form-control" type="password" autoComplete="new-password" minLength={6} value={senha} required={editingId === null} onChange={(event) => setSenha(event.target.value)} />
+                        {editingId !== null && <small>Deixe em branco para manter a senha atual.</small>}
                     </div>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Data de cadastro</label>
-                        <input className="form-control" type="date" value={dataCadastro} required onChange={(event) => setDataCadastro(event.target.value)} />
-                    </div>
-                    <div className="col-12 col-md-6">
-                        <label className="form-label">Tipo</label>
-                        <select className="form-select" value={tipoUsuario} required onChange={(event) => setTipoUsuario(event.target.value as Usuario["tipoUsuario"])}>
-                            <option value="Aluno">Aluno</option>
-                            <option value="Instrutor">Instrutor</option>
-                        </select>
+                        <input className="form-control" type="date" value={editingId === null ? "" : dataCadastro} readOnly />
+                        <small>Definida automaticamente no cadastro.</small>
                     </div>
                     <div className="col-12 d-flex gap-2">
                         <button className="btn btn-primary" type="submit">{editingId !== null ? "Salvar alteracoes" : "Salvar"}</button>
@@ -95,12 +87,11 @@ export function UsersPage({ data, addWithId, updateById, removeById, notify, nav
                 </form>
             </section>
             <SimpleTable
-                columns={["Nome", "E-mail", "Tipo", "Cadastro", "Acoes"]}
+                columns={["Nome", "E-mail", "Cadastro", "Acoes"]}
                 emptyText="Nenhum usuario cadastrado."
                 rows={data.usuarios.map((user) => [
                     user.nomeCompleto,
                     user.email,
-                    user.tipoUsuario,
                     user.dataCadastro,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
                         <ActionButton onClick={() => editUser(user)}>Editar</ActionButton>
