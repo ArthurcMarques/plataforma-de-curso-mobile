@@ -1,6 +1,7 @@
 // Pagina de cursos: cadastra cursos e relaciona categoria e instrutor.
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import type { Curso } from "../models/types";
 import { todayISO } from "../utils";
@@ -8,8 +9,9 @@ import type { PageProps } from "./pageTypes";
 import { ActionButton, courseSummary, SimpleTable } from "./shared";
 import { useSession } from "../auth/session";
 
-export function CoursesPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
+export function CoursesPage({ data, addDirect, updateById, removeById, notify }: PageProps) {
     const [saving, setSaving] = useState(false);
+    const navigateTo = useNavigate();
     const user = useSession();
     const isInstructor = user.perfil === "INSTRUTOR";
     const instructors = data.usuarios.filter(user => user.perfil === "INSTRUTOR");
@@ -61,8 +63,10 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
                 return;
             }
 
-            if (!await addWithId("cursos", { ...course, totalAulas: 0, totalHoras: 0 })) return;
-            clearForm();
+            const saved = await addDirect("cursos", { ...course, totalAulas: 0, totalHoras: 0 });
+            if (!saved) return;
+            notify("Curso salvo. Agora cadastre os módulos e as aulas.");
+            navigateTo(`/cursos/${saved.id}`);
         } finally { setSaving(false); }
     }
 
@@ -132,7 +136,7 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
                 columns={["Titulo", "Categoria", "Instrutor", "Nivel", "Aulas", "Horas", "Acoes"]}
                 emptyText="Nenhum curso cadastrado."
                 rows={rows.map((course) => [
-                    course.titulo,
+                    <Link to={`/cursos/${course.id}`}>{course.titulo}</Link>,
                     course.categoriaNome,
                     course.instrutorNome,
                     course.nivel,
@@ -140,7 +144,7 @@ export function CoursesPage({ data, addWithId, updateById, removeById, notify, n
                     `${course.totalHoras} h`,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
                         <ActionButton disabled={saving} onClick={() => editCourse(course)}>Editar</ActionButton>
-                        <ActionButton disabled={saving} onClick={() => navigate("modulos")}>Modulos</ActionButton>
+                        <Link className="btn btn-sm btn-outline-primary" to={`/cursos/${course.id}`}>Gerenciar curso</Link>
                         <ActionButton disabled={saving} danger onClick={() => removeById("cursos", course.id)}>Excluir</ActionButton>
                     </div>
                 ])}

@@ -1,5 +1,35 @@
 # Validacao da integracao
 
+## Navegação dentro do curso
+
+Roteiro manual para administrador e instrutor:
+
+1. Em Cursos, clique no título ou em **Gerenciar curso**. Confira o resumo e as
+   abas Módulos, Aulas e Avaliações. Criar um curso também abre essa página.
+2. Cadastre e edite módulos: o curso deve estar preenchido e bloqueado. Limpar ou
+   cancelar deve manter esse vínculo. A ordem deve ser única dentro do curso.
+3. Clique em **Gerenciar aulas** de um módulo. Confira o filtro, a listagem e o
+   módulo preenchido no formulário. Crie, edite e exclua uma aula sem vínculos.
+4. Selecione todos os módulos e confira que só aparecem módulos/aulas do curso
+   aberto. Teste dois cursos com módulos de mesma ordem para conferir o isolamento.
+5. Troque abas, use Voltar/Avançar e recarregue. A aba e o filtro devem acompanhar
+   o endereço. Um módulo inválido deve mostrar aviso e as aulas do curso atual.
+6. Como administrador, crie/edite/exclua avaliações nessa página. O curso deve
+   permanecer fixo. Confira atualização das contagens e da nota média.
+7. Como instrutor, confira avaliações somente para leitura, sem formulário nem
+   ações de alteração. Abra o endereço de um curso de outro instrutor: deve ficar
+   indisponível. Como aluno, a rota administrativa deve redirecionar à sua área.
+8. Confira os atalhos na lista geral de módulos e nas turmas do instrutor, o menu
+   Cursos ativo na página interna e a disposição das abas em tela estreita.
+
+Na raiz do projeto, reconstrua o frontend para visualizar as alterações:
+
+```powershell
+docker compose up -d --build frontend
+```
+
+Compilação, testes e validação visual deste roteiro ficam para execução local.
+
 Instalacoes e execucao ficam a cargo do desenvolvedor. Nenhum teste de
 runtime foi executado durante esta alteracao.
 

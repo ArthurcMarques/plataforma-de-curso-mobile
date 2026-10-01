@@ -7,10 +7,11 @@ import { useSession } from "../auth/session";
 import type { PageProps } from "./pageTypes";
 import { ActionButton, SimpleTable } from "./shared";
 
-export function ReviewsPage({ data, addWithId, updateById, removeById, navigate, notify }: PageProps) {
+export function ReviewsPage({ data, addWithId, updateById, removeById, navigate, notify, courseId }: PageProps & { courseId?: string }) {
     const [saving, setSaving] = useState(false);
     const user = useSession();
     const isStudent = user.perfil === "ALUNO";
+    const readOnly = user.perfil === "INSTRUTOR";
     const courses = isStudent ? data.cursos.filter(course => data.matriculas.some(item => sameId(item.idCurso, course.id))) : data.cursos;
     const reviews = isStudent ? data.avaliacoes.filter(item => sameId(item.idUsuario, user.userId)) : data.avaliacoes;
     const rows = reviews.map((item) => ({
@@ -19,7 +20,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
         cursoNome: nameById(data.cursos, item.idCurso, "titulo")
     }));
     const [idUsuario, setIdUsuario] = useState("");
-    const [idCurso, setIdCurso] = useState("");
+    const [idCurso, setIdCurso] = useState(courseId ?? "");
     const [nota, setNota] = useState("");
     const [comentario, setComentario] = useState("");
     const [dataAvaliacao, setDataAvaliacao] = useState(todayISO());
@@ -27,7 +28,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
 
     function clearForm() {
         setIdUsuario("");
-        setIdCurso("");
+        setIdCurso(courseId ?? "");
         setNota("");
         setComentario("");
         setDataAvaliacao(todayISO());
@@ -36,7 +37,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
 
     async function saveReview(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        if (saving) return;
+        if (saving || readOnly) return;
         setSaving(true);
         try {
             if (!courses.some(course => sameId(course.id, idCurso))) {
@@ -76,9 +77,9 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
 
     return (
         <>
-            <PageHeader title={isStudent ? "Minhas avaliações" : "Avaliações"} description={isStudent ? "Avalie os cursos em que você está matriculado." : "Gerencie as avaliações dos cursos."} />
+            <PageHeader title={isStudent ? "Minhas avaliações" : "Avaliações"} description={isStudent ? "Avalie os cursos em que você está matriculado." : readOnly ? "Veja as notas e os comentários dos alunos deste curso." : "Gerencie as avaliações dos cursos."} />
             {courses.length === 0 && <p className="alert alert-info">{isStudent ? "Matricule-se em um curso antes de avaliar." : "Cadastre um curso antes de registrar avaliações."}</p>}
-            <section className="panel">
+            {!readOnly && <section className="panel">
                 {editingId !== null && <p className="edit-banner">Editando avaliacao.</p>}
                 <form onSubmit={saveReview}>
                     <fieldset className="row g-3" disabled={saving || !courses.length}>
@@ -91,7 +92,7 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
                     </div>}
                     <div className="col-12 col-md-6">
                         <label className="form-label">Curso</label>
-                        <select className="form-select" value={idCurso} required onChange={(event) => setIdCurso(event.target.value)}>
+                        <select className="form-select" value={idCurso} disabled={Boolean(courseId)} required onChange={(event) => setIdCurso(event.target.value)}>
                             <option value="">Selecione</option>
                             {courses.map((course) => <option value={course.id} key={course.id}>{course.titulo}</option>)}
                         </select>
@@ -118,9 +119,9 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
                     </div>
                     </fieldset>
                 </form>
-            </section>
+            </section>}
             <SimpleTable
-                columns={["Usuario", "Curso", "Nota", "Comentario", "Data", "Acoes"]}
+                columns={["Usuario", "Curso", "Nota", "Comentario", "Data", ...(!readOnly ? ["Acoes"] : [])]}
                 emptyText="Nenhuma avaliacao cadastrada."
                 rows={rows.map((review) => [
                     review.usuarioNome,
@@ -128,11 +129,11 @@ export function ReviewsPage({ data, addWithId, updateById, removeById, navigate,
                     review.nota,
                     review.comentario || "-",
                     review.dataAvaliacao,
-                    <div className="d-flex justify-content-center gap-2 flex-wrap">
+                    ...(!readOnly ? [<div className="d-flex justify-content-center gap-2 flex-wrap" key="actions">
                         <ActionButton disabled={saving} onClick={() => editReview(review)}>Editar</ActionButton>
-                        <ActionButton disabled={saving} onClick={() => navigate("cursos")}>Cursos</ActionButton>
+                        {!courseId && <ActionButton disabled={saving} onClick={() => navigate("cursos")}>Cursos</ActionButton>}
                         <ActionButton disabled={saving} danger onClick={() => removeById("avaliacoes", review.id)}>Excluir</ActionButton>
-                    </div>
+                    </div>] : [])
                 ])}
             />
         </>

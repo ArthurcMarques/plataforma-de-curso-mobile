@@ -39,13 +39,13 @@ export function Layout({ sections, currentPath, onNavigate, children }: LayoutPr
                             </li>
                             {Object.entries(grouped).map(([groupName, items]) => (
                                 <li className="nav-item dropdown" key={groupName}>
-                                    <button className={`nav-link dropdown-toggle btn btn-link ${items.some((item) => item.path === currentPath) ? "active fw-semibold" : ""}`} type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button className={`nav-link dropdown-toggle btn btn-link ${items.some((item) => (item.path === currentPath || currentPath.startsWith(`${item.path}/`))) ? "active fw-semibold" : ""}`} type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                         {groupName}
                                     </button>
                                     <ul className="dropdown-menu dropdown-menu-end">
                                         {items.map((item) => (
                                             <li key={item.id}>
-                                                <button className={`dropdown-item ${currentPath === item.path ? "active" : ""}`} type="button" onClick={() => onNavigate(item.path)}>
+                                                <button className={`dropdown-item ${(currentPath === item.path || currentPath.startsWith(`${item.path}/`)) ? "active" : ""}`} type="button" onClick={() => onNavigate(item.path)}>
                                                     {item.name}
                                                 </button>
                                             </li>

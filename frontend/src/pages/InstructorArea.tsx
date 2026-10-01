@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useSession } from "../auth/session";
 import { PageHeader } from "../components/PageHeader";
 import { sameId } from "../utils";
@@ -23,7 +24,7 @@ export function InstructorArea({ data, navigate }: PageProps) {
                 const lessons = data.aulas.filter(lesson => modules.some(module => sameId(module.id, lesson.idModulo)));
                 const done = data.progressoAulas.filter(progress => sameId(progress.idUsuario, item.idUsuario) && lessons.some(lesson => sameId(lesson.id, progress.idAula))).length;
                 return [data.usuarios.find(student => sameId(student.id, item.idUsuario))?.nomeCompleto ?? "Aluno",
-                    data.cursos.find(course => sameId(course.id, item.idCurso))?.titulo ?? "Curso", item.dataMatricula, `${done}/${lessons.length}`];
+                    <Link to={`/cursos/${item.idCurso}`}>{data.cursos.find(course => sameId(course.id, item.idCurso))?.titulo ?? "Curso"}</Link>, item.dataMatricula, `${done}/${lessons.length}`];
             })} />
     </>;
 }

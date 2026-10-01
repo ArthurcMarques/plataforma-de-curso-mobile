@@ -8,7 +8,7 @@ import type { PageProps } from "./pageTypes";
 import { ActionButton, SimpleTable } from "./shared";
 import { useSession } from "../auth/session";
 
-export function LessonsPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
+export function LessonsPage({ data, addWithId, updateById, removeById, notify, navigate, moduleId }: PageProps & { moduleId?: string }) {
     const [saving, setSaving] = useState(false);
     const isInstructor = useSession().perfil === "INSTRUTOR";
     const rows = data.aulas.map((lesson) => {
@@ -19,7 +19,7 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
             cursoNome: module ? nameById(data.cursos, module.idCurso, "titulo") : "-"
         };
     });
-    const [idModulo, setIdModulo] = useState("");
+    const [idModulo, setIdModulo] = useState(moduleId ?? "");
     const [titulo, setTitulo] = useState("");
     const [tipoConteudo, setTipoConteudo] = useState("");
     const [urlConteudo, setUrlConteudo] = useState("");
@@ -28,7 +28,7 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
     const [editingId, setEditingId] = useState<string | number | null>(null);
 
     function clearForm() {
-        setIdModulo("");
+        setIdModulo(moduleId ?? "");
         setTitulo("");
         setTipoConteudo("");
         setUrlConteudo("");
@@ -98,7 +98,7 @@ export function LessonsPage({ data, addWithId, updateById, removeById, notify, n
                     <fieldset className="row g-3" disabled={saving || !data.modulos.length}>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Modulo</label>
-                        <select className="form-select" value={idModulo} required onChange={(event) => setIdModulo(event.target.value)}>
+                        <select className="form-select" value={idModulo} disabled={Boolean(moduleId)} required onChange={(event) => setIdModulo(event.target.value)}>
                             <option value="">Selecione</option>
                             {data.modulos.map((module) => (
                                 <option value={module.id} key={module.id}>{nameById(data.cursos, module.idCurso, "titulo")} - {module.titulo}</option>

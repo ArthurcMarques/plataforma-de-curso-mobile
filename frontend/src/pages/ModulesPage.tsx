@@ -1,23 +1,24 @@
 // Pagina de modulos: organiza modulos dentro de cada curso.
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { nameById, sameId } from "../utils";
 import type { PageProps } from "./pageTypes";
 import { ActionButton, SimpleTable } from "./shared";
 import { useSession } from "../auth/session";
 
-export function ModulesPage({ data, addWithId, updateById, removeById, notify, navigate }: PageProps) {
+export function ModulesPage({ data, addWithId, updateById, removeById, notify, courseId }: PageProps & { courseId?: string }) {
     const [saving, setSaving] = useState(false);
     const isInstructor = useSession().perfil === "INSTRUTOR";
     const rows = data.modulos.map((item) => ({ ...item, cursoNome: nameById(data.cursos, item.idCurso, "titulo") }));
-    const [idCurso, setIdCurso] = useState("");
+    const [idCurso, setIdCurso] = useState(courseId ?? "");
     const [titulo, setTitulo] = useState("");
     const [ordem, setOrdem] = useState("");
     const [editingId, setEditingId] = useState<string | number | null>(null);
 
     function clearForm() {
-        setIdCurso("");
+        setIdCurso(courseId ?? "");
         setTitulo("");
         setOrdem("");
         setEditingId(null);
@@ -73,7 +74,7 @@ export function ModulesPage({ data, addWithId, updateById, removeById, notify, n
                     <fieldset className="row g-3" disabled={saving || !data.cursos.length}>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Curso</label>
-                        <select className="form-select" value={idCurso} required onChange={(event) => setIdCurso(event.target.value)}>
+                        <select className="form-select" value={idCurso} disabled={Boolean(courseId)} required onChange={(event) => setIdCurso(event.target.value)}>
                             <option value="">Selecione</option>
                             {data.cursos.map((course) => <option value={course.id} key={course.id}>{course.titulo}</option>)}
                         </select>
@@ -102,7 +103,7 @@ export function ModulesPage({ data, addWithId, updateById, removeById, notify, n
                     module.ordem,
                     <div className="d-flex justify-content-center gap-2 flex-wrap">
                         <ActionButton disabled={saving} onClick={() => editModule(module)}>Editar</ActionButton>
-                        <ActionButton disabled={saving} onClick={() => navigate("aulas")}>Aulas</ActionButton>
+                        <Link className="btn btn-sm btn-outline-primary" to={`/cursos/${module.idCurso}?aba=aulas&modulo=${module.id}`}>Gerenciar aulas</Link>
                         <ActionButton disabled={saving} danger onClick={() => removeById("modulos", module.id)}>Excluir</ActionButton>
                     </div>
                 ])}

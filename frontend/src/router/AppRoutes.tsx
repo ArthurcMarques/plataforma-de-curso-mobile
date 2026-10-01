@@ -2,6 +2,7 @@
 // Cada path aponta para uma pagina especifica.
 import { Navigate, Route, Routes } from "react-router-dom";
 import { CategoriesPage } from "../pages/CategoriesPage";
+import { CourseDetailPage } from "../pages/CourseDetailPage";
 import { CoursesPage } from "../pages/CoursesPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { EnrollmentsPage } from "../pages/EnrollmentsPage";
@@ -37,6 +38,7 @@ export function AppRoutes(props: PageProps) {
         <Route path="/instrutor" element={<InstructorArea {...props} />} />
         <Route path="/minha-conta" element={<MyAccountPage {...props} />} />
         <Route path="/cursos" element={<CoursesPage {...props} />} />
+        <Route path="/cursos/:courseId" element={<CourseDetailPage {...props} />} />
         <Route path="/modulos" element={<ModulesPage {...props} />} />
         <Route path="/aulas" element={<LessonsPage {...props} />} />
         <Route path="*" element={<Navigate to={home} replace />} />
@@ -49,6 +51,7 @@ export function AppRoutes(props: PageProps) {
             <Route path="/resumo" element={<DashboardPage {...props} />} />
             <Route path="/categorias" element={<CategoriesPage {...props} />} />
             <Route path="/cursos" element={<CoursesPage {...props} />} />
+            <Route path="/cursos/:courseId" element={<CourseDetailPage {...props} />} />
             <Route path="/modulos" element={<ModulesPage {...props} />} />
             <Route path="/aulas" element={<LessonsPage {...props} />} />
             <Route path="/trilhas" element={<TracksPage {...props} />} />
