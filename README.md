@@ -89,6 +89,27 @@ administradores emitem certificados, registram pagamentos e gerenciam assinatura
 
 ### Ativar a atualizacao e promover o primeiro administrador
 
+Os menus e formularios acompanham o perfil:
+
+- Aluno: catalogo em `/aluno`, cursos e progresso em `/minhas-matriculas`,
+  certificados em `/meus-certificados` e avaliacoes proprias em `/avaliacoes`.
+  O formulario de avaliacao oferece apenas cursos matriculados e usa o aluno
+  autenticado automaticamente.
+- Instrutor: seus cursos, modulos, aulas e turmas. Ao criar curso, o responsavel
+  e preenchido com a conta autenticada, sem escolha de outro instrutor.
+- Administrador: em `/usuarios`, pode cadastrar e editar contas escolhendo o
+  perfil, alem de filtrar a listagem. A alteracao de perfil usa o endpoint
+  administrativo; se falhar depois do cadastro, o formulario passa a editar a
+  conta ja criada para evitar duplicacao. Exclusao e rebaixamento proprios
+  nao sao oferecidos na interface.
+- Todos: `/minha-conta` permite editar nome, email e senha, com confirmacao
+  da nova senha. O perfil e exibido somente para consulta.
+
+Ao voltar o foco para a aba, o frontend consulta novamente o perfil e remonta
+a area caso as permissoes tenham mudado. A API continua sendo responsavel por
+autorizar cada operacao. Os formularios de cursos, modulos, aulas, avaliacoes e
+usuarios ficam desabilitados durante o envio.
+
 A migracao adiciona `Perfil` com valor ALUNO a todos os usuarios existentes,
 sem apagar dados. Usuarios de demonstracao antigos tambem precisarao de promocao.
 Execute na raiz do projeto:

@@ -50,3 +50,38 @@ node --experimental-strip-types --test tests/contracts.test.mjs
 
 Datas sem horario sao enviadas como meia-noite UTC. Campos textuais nulos
 sao apresentados vazios; duracao nula aparece como zero.
+
+## Formularios por perfil
+
+Validacoes manuais adicionais (nao executadas durante a alteracao):
+
+1. Aluno: confira os menus Catalogo, Meus cursos e progresso, Meus certificados,
+   Minhas avaliacoes e Minha conta. O catalogo oferece matricula; os conteudos e
+   checkboxes de progresso ficam na pagina dos cursos matriculados.
+2. Sem matriculas, o formulario de avaliacao deve ficar desabilitado. Depois de
+   se matricular, selecione um curso, salve e edite uma avaliacao. Nao deve existir
+   seletor de outro usuario, nem cursos sem matricula no seletor.
+3. Instrutor: crie um curso sem escolher um instrutor. O nome deve aparecer somente
+   para leitura, e a requisicao deve usar seu proprio ID. Cadastre modulo e aula;
+   "Ver turmas" deve abrir a area do instrutor, sem formulario administrativo de progresso.
+4. Administrador: cadastre uma conta de cada perfil em Usuarios e perfis. Confirme
+   o perfil apos recarregar e fazer login com a nova conta. Filtre a listagem por
+   perfil. Ao editar sua propria conta, nao deve ser possivel mudar seu perfil
+   nem aparecer a acao de exclui-la.
+5. Simule falha na requisicao de alteracao de perfil apos criar uma conta (por
+   exemplo, bloqueando essa URL no DevTools). O aviso deve indicar que a conta
+   foi salva; uma nova tentativa deve editar o mesmo ID, sem novo POST de usuario.
+6. Nos tres perfis, use Minha conta para editar nome/email, mantendo a senha em
+   branco. Confira que o nome no topo e atualizado. Senhas diferentes devem
+   impedir o envio; com senhas iguais, confira o login com a nova senha.
+7. Durante um envio lento, confira os formularios e botoes de edicao desabilitados.
+   Depois de erro, os campos devem continuar preenchidos e permitir nova tentativa.
+8. Em outra sessao administrativa, altere o perfil do usuario. Ao voltar o foco
+   para a aba dele, a area e os menus devem mudar, sem manter dados da area anterior.
+
+Para validar compilacao e contratos antes do roteiro, execute em `frontend/`:
+
+```powershell
+npm run build
+node --experimental-strip-types --test tests/contracts.test.mjs
+```
