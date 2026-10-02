@@ -1,5 +1,7 @@
 // Módulo raiz: reúne os recursos de negócio, a persistência e a autenticação da API.
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
+import { PrismaExceptionFilter } from './prisma/prisma-exception.filter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -22,6 +24,6 @@ import { AuthModule } from './auth/auth.module';
 @Module({
   imports: [PrismaModule, UsuarioModule, CategoriaModule, CursoModule, ModuloModule, AulaModule, MatriculaModule, ProgressoAulaModule, AvaliacaoModule, TrilhaModule, TrilhaCursoModule, CertificadoModule, PlanoModule, AssinaturaModule, PagamentoModule, AuthModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_FILTER, useClass: PrismaExceptionFilter }],
 })
 export class AppModule {}

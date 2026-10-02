@@ -1,5 +1,5 @@
 // Política central de autorização: limita leituras no banco e valida a propriedade dos vínculos nas escritas.
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { SessionUser } from './session-user';
 
@@ -57,7 +57,7 @@ export class AccessPolicyService {
     }
   }
 
-  // Combina o ID solicitado com o escopo do perfil. O mesmo 404 cobre registro ausente e registro sem acesso.
+  // Mantém as listas filtradas e distingue registro inexistente (404) de acesso proibido (403).
   async read(resource: string, user: SessionUser, params: Record<string, string>) {
     const config = resources[resource];
     const where = this.scope(resource, user);
@@ -65,7 +65,14 @@ export class AccessPolicyService {
     if (Object.keys(params).length === 0) return this.delegate(resource).findMany({ where, ...options });
     const keyWhere = this.keyWhere(config.keys, params);
     const row = await this.delegate(resource).findFirst({ where: { AND: [where, keyWhere] }, ...options });
-    if (!row) throw new NotFoundException('Registro nao encontrado ou sem acesso.');
+    if (!row) {
+      // A consulta extra verifica somente a chave, sem carregar dados privados.
+      const exists = await this.delegate(resource).findFirst({
+        where: keyWhere, select: Object.fromEntries(config.keys.map(key => [key, true])),
+      });
+      if (exists) throw new ForbiddenException('Você não tem permissão para acessar este registro.');
+      throw new NotFoundException('Registro não encontrado.');
+    }
     return row;
   }
 
@@ -74,7 +81,7 @@ export class AccessPolicyService {
     return Object.fromEntries(keys.map(key => {
       const param = keys.length === 1 ? 'id' : `id${key.slice(3)}`;
       const value = Number(params[param]);
-      if (!Number.isInteger(value) || value <= 0) throw new BadRequestException('ID invalido.');
+      if (!/^\d+$/.test(params[param] ?? '') || !Number.isSafeInteger(value) || value <= 0 || value > 2147483647) throw new BadRequestException('ID invalido.');
       return [key, value];
     }));
   }
@@ -82,11 +89,17 @@ export class AccessPolicyService {
   private async ownsCourse(id: unknown, user: SessionUser) {
     if (!Number.isInteger(id)) throw new BadRequestException('idCurso deve ser inteiro.');
     const row = await this.prisma.curso.findFirst({ where: { ID_Curso: id as number, ID_Instrutor: user.userId } });
-    if (!row) throw new ForbiddenException('Curso de outro instrutor.');
+    if (!row) {
+      const exists = await this.prisma.curso.findUnique({ where: { ID_Curso: id as number }, select: { ID_Curso: true } });
+      if (!exists) throw new BadRequestException('O curso informado não existe.');
+      throw new ForbiddenException('Curso de outro instrutor.');
+    }
   }
 
   private async enrolled(id: unknown, user: SessionUser) {
     if (!Number.isInteger(id)) throw new BadRequestException('idCurso deve ser inteiro.');
+    const course = await this.prisma.curso.findUnique({ where: { ID_Curso: id as number }, select: { ID_Curso: true } });
+    if (!course) throw new BadRequestException('O curso informado não existe.');
     const row = await this.prisma.matricula.findFirst({ where: { ID_Curso: id as number, ID_Usuario: user.userId } });
     if (!row) throw new ForbiddenException('Matricule-se no curso para acessar este recurso.');
   }
@@ -94,6 +107,13 @@ export class AccessPolicyService {
   // Valida tanto o registro atual quanto o destino dos vínculos enviados em POST/PATCH.
   async authorizeWrite(resource: string, method: string, params: Record<string, string>, body: Record<string, any>, user: SessionUser, handler: string) {
     if (!resources[resource]) throw new ForbiddenException();
+    if (Object.keys(params).length) this.keyWhere(resources[resource].keys, params);
+    for (const field of ['idUsuario', 'idCurso', 'idInstrutor', 'idCategoria', 'idModulo', 'idAula', 'idPlano', 'idAssinatura', 'idTrilha']) {
+      if (!(field in body) || (field === 'idTrilha' && body[field] === null && resource === 'certificado')) continue;
+      if (!Number.isSafeInteger(body[field]) || body[field] <= 0 || body[field] > 2147483647) {
+        throw new BadRequestException(`${field} deve ser um inteiro positivo válido.`);
+      }
+    }
     // Mudança de perfil usa uma operação separada; o administrador não pode rebaixar a própria conta.
     if (handler === 'updatePerfil') {
       if (user.perfil !== 'ADMINISTRADOR' || Number(params.id) === user.userId) {
@@ -129,7 +149,7 @@ export class AccessPolicyService {
         const idModulo = body.idModulo ?? existing?.ID_Modulo;
         if (!Number.isInteger(idModulo)) throw new BadRequestException('idModulo deve ser inteiro.');
         const module = await this.prisma.modulo.findUnique({ where: { ID_Modulo: idModulo } });
-        if (!module) throw new NotFoundException('Modulo nao encontrado.');
+        if (!module) throw new BadRequestException('O módulo informado não existe.');
         await this.ownsCourse(module.ID_Curso, user);
       }
       return;
@@ -140,13 +160,13 @@ export class AccessPolicyService {
       if (body.dataConclusao != null) throw new ForbiddenException('Conclusao da matricula exige administrador.');
       if (!Number.isInteger(body.idCurso)) throw new BadRequestException('idCurso deve ser inteiro.');
       const duplicate = await this.prisma.matricula.findFirst({ where: { ID_Usuario: user.userId, ID_Curso: body.idCurso } });
-      if (duplicate) throw new BadRequestException('Voce ja esta matriculado neste curso.');
+      if (duplicate) throw new ConflictException('Voce ja esta matriculado neste curso.');
     }
     if (resource === 'avaliacao') await this.enrolled(body.idCurso ?? existing?.ID_Curso, user);
     if (resource === 'progresso-aula') {
       if (!Number.isInteger(body.idAula)) throw new BadRequestException('idAula deve ser inteiro.');
       const lesson = await this.prisma.aula.findUnique({ where: { ID_Aula: body.idAula }, include: { modulo: true } });
-      if (!lesson) throw new NotFoundException('Aula nao encontrada.');
+      if (!lesson) throw new BadRequestException('A aula informada não existe.');
       await this.enrolled(lesson.modulo.ID_Curso, user);
     }
   }

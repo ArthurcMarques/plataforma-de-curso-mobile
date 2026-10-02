@@ -181,6 +181,12 @@ try {
     await request('POST', path, 400, {});
     ok(`POST ${path}: rejeita campos obrigatorios ausentes`);
 
+    const invalidPath = `${path}/${scenario.keys.map(() => 'abc').join('/')}`;
+    for (const method of ['GET', 'PATCH', 'DELETE']) {
+      await request(method, invalidPath, 400, method === 'PATCH' ? scenario.patch : undefined, adminToken);
+    }
+    await request('GET', path, 401, undefined, null);
+    await request('GET', path, 401, undefined, 'token-invalido');
     const input = scenario.body();
     const created = await request('POST', path, 201, input, scenario.route === 'usuario' ? null : adminToken);
     for (const key of scenario.keys) assert.ok(Number.isInteger(created?.[key]), `${path}: ID ausente: ${key}`);
@@ -195,6 +201,8 @@ try {
       credentials = { email: input.email, password: input.password };
       await login();
       ok('Login com senha cadastrada retorna JWT');
+      await request('POST', path, 409, input, null);
+      ok('Cadastro com e-mail duplicado retorna 409');
       await request('POST', '/auth/login', 401,
         { ...credentials, password: 'senha-incorreta' }, null);
       ok('Login rejeita senha incorreta');
@@ -258,6 +266,10 @@ try {
       const deleted = await request('DELETE', itemPath, 200);
       assert.ok(matchesKeys(deleted, created, scenario.keys), `${itemPath}: registro excluido incorreto`);
       ok(`DELETE ${itemPath}`);
+      // A chave recém-excluída garante ausência sem depender de um ID arbitrário.
+      for (const method of ['GET', 'PATCH', 'DELETE']) {
+        await request(method, itemPath, 404, method === 'PATCH' ? scenario.patch : undefined, adminToken);
+      }
       const listed = await request('GET', `/${scenario.route}`, 200);
       assert.ok(Array.isArray(listed));
       assert.ok(!listed.some(row => matchesKeys(row, created, scenario.keys)), `${itemPath}: registro ainda existe`);
