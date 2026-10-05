@@ -1,5 +1,6 @@
 // Rotas HTTP de matrículas que vinculam usuários aos cursos. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { MatriculaService } from './matricula.service';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
 import { UpdateMatriculaDto } from './dto/update-matricula.dto';
@@ -23,14 +24,14 @@ export class MatriculaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as matrículas' })
-  findAll() {
-    return this.matriculaService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.matriculaService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma matrícula pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.matriculaService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.matriculaService.findOne(+id, request.user);
   }
 
   @Patch(':id')

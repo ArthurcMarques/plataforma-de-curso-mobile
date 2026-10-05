@@ -1,5 +1,6 @@
 // Rotas HTTP de trilhas que organizam sequências de cursos. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { TrilhaService } from './trilha.service';
 import { CreateTrilhaDto } from './dto/create-trilha.dto';
 import { UpdateTrilhaDto } from './dto/update-trilha.dto';
@@ -23,14 +24,14 @@ export class TrilhaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as trilhas' })
-  findAll() {
-    return this.trilhaService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.trilhaService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma trilha pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.trilhaService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.trilhaService.findOne(+id, request.user);
   }
 
   @Patch(':id')

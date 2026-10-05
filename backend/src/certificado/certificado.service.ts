@@ -1,4 +1,6 @@
 // Persistência de certificados emitidos para usuários e cursos. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
+import { AccessPolicyService } from '../auth/access-policy.service';
+import type { SessionUser } from '../auth/session-user';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCertificadoDto } from './dto/create-certificado.dto';
@@ -6,7 +8,7 @@ import { UpdateCertificadoDto } from './dto/update-certificado.dto';
 
 @Injectable()
 export class CertificadoService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
 
   create(createCertificadoDto: CreateCertificadoDto) {
     return this.prisma.certificado.create({
@@ -19,13 +21,13 @@ export class CertificadoService {
     });
   }
 
-  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
-  findAll() {
-    return this.prisma.certificado.findMany();
+  // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.
+  findAll(user: SessionUser) {
+    return this.access.read('certificado', user, {});
   }
 
-  findOne(id: number) {
-    return this.prisma.certificado.findUnique({ where: { ID_Certificado: id } });
+  findOne(id: number, user: SessionUser) {
+    return this.access.read('certificado', user, { id: String(id) });
   }
 
   update(id: number, updateCertificadoDto: UpdateCertificadoDto) {

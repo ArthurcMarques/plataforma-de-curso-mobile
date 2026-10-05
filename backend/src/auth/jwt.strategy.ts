@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate({ sub }: { sub: number }) {
     if (!Number.isInteger(sub)) throw new UnauthorizedException();
-    const user = await this.usuarios.findOne(sub);
+    const user = await this.usuarios.findSessionUser(sub);
     if (!user) throw new UnauthorizedException();
     // Consulta o banco em cada chamada: mudancas de perfil valem para tokens existentes.
     return { userId: user.ID_Usuario, email: user.Email, name: user.NomeCompleto, perfil: user.Perfil };

@@ -1,6 +1,6 @@
 // Rotas HTTP de contas de usuários e seus perfis de acesso. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -31,23 +31,20 @@ export class UsuarioController {
   }
 
   @ApiBearerAuth('token')
-  @UseGuards(AuthGuard('jwt'))
   @Get()
   @ApiOperation({ summary: 'Listar todos os usuários' })
-  findAll() {
-    return this.usuarioService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.usuarioService.findAll(request.user);
   }
 
   @ApiBearerAuth('token')
-  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
   @ApiOperation({ summary: 'Buscar um usuário pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.usuarioService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.usuarioService.findOne(+id, request.user);
   }
 
   @ApiBearerAuth('token')
-  @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
   @ApiOperation({ summary: 'Atualizar um usuário' })
   update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
@@ -55,7 +52,6 @@ export class UsuarioController {
   }
 
   @ApiBearerAuth('token')
-  @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
   @ApiOperation({ summary: 'Remover um usuário' })
   remove(@Param('id') id: string) {

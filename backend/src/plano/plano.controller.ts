@@ -1,5 +1,6 @@
 // Rotas HTTP de planos com preço e duração. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PlanoService } from './plano.service';
 import { CreatePlanoDto } from './dto/create-plano.dto';
 import { UpdatePlanoDto } from './dto/update-plano.dto';
@@ -23,14 +24,14 @@ export class PlanoController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os planos' })
-  findAll() {
-    return this.planoService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.planoService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar um plano pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.planoService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.planoService.findOne(+id, request.user);
   }
 
   @Patch(':id')

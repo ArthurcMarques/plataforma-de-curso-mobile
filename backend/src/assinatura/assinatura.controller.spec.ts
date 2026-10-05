@@ -10,7 +10,7 @@ describe('AssinaturaController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AssinaturaController],
       providers: [AssinaturaService],
-    }).compile();
+    }).useMocker(() => ({})).compile();
 
     controller = module.get<AssinaturaController>(AssinaturaController);
   });

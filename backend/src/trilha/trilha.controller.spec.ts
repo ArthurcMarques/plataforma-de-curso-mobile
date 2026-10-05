@@ -10,7 +10,7 @@ describe('TrilhaController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TrilhaController],
       providers: [TrilhaService],
-    }).compile();
+    }).useMocker(() => ({})).compile();
 
     controller = module.get<TrilhaController>(TrilhaController);
   });

@@ -1,4 +1,6 @@
 // Persistência de conclusões de aulas identificadas pelo par usuário/aula. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
+import { AccessPolicyService } from '../auth/access-policy.service';
+import type { SessionUser } from '../auth/session-user';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProgressoAulaDto } from './dto/create-progresso-aula.dto';
@@ -6,7 +8,7 @@ import { UpdateProgressoAulaDto } from './dto/update-progresso-aula.dto';
 
 @Injectable()
 export class ProgressoAulaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
 
   create(createProgressoAulaDto: CreateProgressoAulaDto) {
     return this.prisma.progressoAula.create({
@@ -22,16 +24,14 @@ export class ProgressoAulaService {
     });
   }
 
-  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
-  findAll() {
-    return this.prisma.progressoAula.findMany();
+  // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.
+  findAll(user: SessionUser) {
+    return this.access.read('progresso-aula', user, {});
   }
 
   // A chave composta exige os dois IDs; um deles sozinho não identifica o vínculo.
-  findOne(idUsuario: number, idAula: number) {
-    return this.prisma.progressoAula.findUnique({
-      where: { ID_Usuario_ID_Aula: { ID_Usuario: idUsuario, ID_Aula: idAula } },
-    });
+  findOne(idUsuario: number, idAula: number, user: SessionUser) {
+    return this.access.read('progresso-aula', user, { idUsuario: String(idUsuario), idAula: String(idAula) });
   }
 
   update(

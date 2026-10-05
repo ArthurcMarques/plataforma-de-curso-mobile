@@ -1,5 +1,6 @@
 // Rotas HTTP de conclusões de aulas identificadas pelo par usuário/aula. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ProgressoAulaService } from './progresso-aula.service';
 import { CreateProgressoAulaDto } from './dto/create-progresso-aula.dto';
 import { UpdateProgressoAulaDto } from './dto/update-progresso-aula.dto';
@@ -23,17 +24,18 @@ export class ProgressoAulaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os progressos de aulas' })
-  findAll() {
-    return this.progressoAulaService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.progressoAulaService.findAll(request.user);
   }
 
   @Get(':idUsuario/:idAula')
   @ApiOperation({ summary: 'Buscar o progresso de um usuário em uma aula' })
   findOne(
+    @Req() request: AuthenticatedRequest,
     @Param('idUsuario') idUsuario: string,
     @Param('idAula') idAula: string,
   ) {
-    return this.progressoAulaService.findOne(+idUsuario, +idAula);
+    return this.progressoAulaService.findOne(+idUsuario, +idAula, request.user);
   }
 
   @Patch(':idUsuario/:idAula')

@@ -10,7 +10,7 @@ describe('ProgressoAulaController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProgressoAulaController],
       providers: [ProgressoAulaService],
-    }).compile();
+    }).useMocker(() => ({})).compile();
 
     controller = module.get<ProgressoAulaController>(ProgressoAulaController);
   });

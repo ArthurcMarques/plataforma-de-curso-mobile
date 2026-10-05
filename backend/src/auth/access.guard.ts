@@ -1,4 +1,4 @@
-// Aplica a política após a autenticação: prepara leituras filtradas ou autoriza a escrita antes do controller.
+// Valida parâmetros e autoriza escritas; as leituras seguem pelo controller e service.
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { Reflector } from '@nestjs/core';
@@ -14,9 +14,7 @@ export class AccessGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     if (resource === 'auth' && context.getHandler().name === 'me') return true;
     if (request.method === 'GET' || request.method === 'HEAD') {
-      request.scopedResult = await this.policy.read(resource, request.user, request.params);
-      // O marcador separado permite devolver até uma lista vazia sem executar outra consulta.
-      request.hasScopedResult = true;
+      this.policy.validateParams(resource, request.params);
     } else {
       await this.policy.authorizeWrite(resource, request.method, request.params, request.body ?? {}, request.user, context.getHandler().name);
     }

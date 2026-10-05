@@ -1,5 +1,6 @@
 // Rotas HTTP de certificados emitidos para usuários e cursos. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CertificadoService } from './certificado.service';
 import { CreateCertificadoDto } from './dto/create-certificado.dto';
 import { UpdateCertificadoDto } from './dto/update-certificado.dto';
@@ -23,14 +24,14 @@ export class CertificadoController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os certificados' })
-  findAll() {
-    return this.certificadoService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.certificadoService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar um certificado pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.certificadoService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.certificadoService.findOne(+id, request.user);
   }
 
   @Patch(':id')

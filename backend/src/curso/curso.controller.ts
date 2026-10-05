@@ -1,5 +1,6 @@
 // Rotas HTTP de cursos associados a categoria e instrutor. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CursoService } from './curso.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
 import { UpdateCursoDto } from './dto/update-curso.dto';
@@ -23,14 +24,14 @@ export class CursoController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os cursos' })
-  findAll() {
-    return this.cursoService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.cursoService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar um curso pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.cursoService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.cursoService.findOne(+id, request.user);
   }
 
   @Patch(':id')

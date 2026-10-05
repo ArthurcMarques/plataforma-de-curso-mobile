@@ -1,5 +1,6 @@
 // Rotas HTTP de aulas vinculadas aos módulos do curso. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { AulaService } from './aula.service';
 import { CreateAulaDto } from './dto/create-aula.dto';
 import { UpdateAulaDto } from './dto/update-aula.dto';
@@ -23,14 +24,14 @@ export class AulaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as aulas' })
-  findAll() {
-    return this.aulaService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.aulaService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma aula pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.aulaService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.aulaService.findOne(+id, request.user);
   }
 
   @Patch(':id')

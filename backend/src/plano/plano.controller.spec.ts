@@ -10,7 +10,7 @@ describe('PlanoController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PlanoController],
       providers: [PlanoService],
-    }).compile();
+    }).useMocker(() => ({})).compile();
 
     controller = module.get<PlanoController>(PlanoController);
   });

@@ -1,5 +1,6 @@
 // Rotas HTTP de vínculos ordenados entre trilhas e cursos. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { TrilhaCursoService } from './trilha-curso.service';
 import { CreateTrilhaCursoDto } from './dto/create-trilha-curso.dto';
 import { UpdateTrilhaCursoDto } from './dto/update-trilha-curso.dto';
@@ -23,17 +24,18 @@ export class TrilhaCursoController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os vínculos entre trilhas e cursos' })
-  findAll() {
-    return this.trilhaCursoService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.trilhaCursoService.findAll(request.user);
   }
 
   @Get(':idTrilha/:idCurso')
   @ApiOperation({ summary: 'Buscar o vínculo entre uma trilha e um curso' })
   findOne(
+    @Req() request: AuthenticatedRequest,
     @Param('idTrilha') idTrilha: string,
     @Param('idCurso') idCurso: string,
   ) {
-    return this.trilhaCursoService.findOne(+idTrilha, +idCurso);
+    return this.trilhaCursoService.findOne(+idTrilha, +idCurso, request.user);
   }
 
   @Patch(':idTrilha/:idCurso')

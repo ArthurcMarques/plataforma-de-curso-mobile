@@ -5,3 +5,7 @@ export interface SessionUser {
   name: string;
   perfil: 'ALUNO' | 'INSTRUTOR' | 'ADMINISTRADOR';
 }
+
+export interface AuthenticatedRequest {
+  user: SessionUser;
+}

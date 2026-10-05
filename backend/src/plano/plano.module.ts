@@ -1,3 +1,4 @@
+import { AccessPolicyModule } from '../auth/access-policy.module';
 // Registra o controller e o serviço de planos com preço e duração no contêiner de dependências do NestJS.
 import { Module } from '@nestjs/common';
 import { PlanoService } from './plano.service';
@@ -5,7 +6,7 @@ import { PlanoController } from './plano.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AccessPolicyModule],
   controllers: [PlanoController],
   providers: [PlanoService],
 })

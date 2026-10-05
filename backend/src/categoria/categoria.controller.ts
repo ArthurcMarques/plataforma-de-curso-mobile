@@ -1,5 +1,6 @@
 // Rotas HTTP de categorias que organizam cursos e trilhas. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { CategoriaService } from './categoria.service';
 import { CreateCategoriaDto } from './dto/create-categoria.dto';
 import { UpdateCategoriaDto } from './dto/update-categoria.dto';
@@ -23,14 +24,14 @@ export class CategoriaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as categorias' })
-  findAll() {
-    return this.categoriaService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.categoriaService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma categoria pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.categoriaService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.categoriaService.findOne(+id, request.user);
   }
 
   @Patch(':id')

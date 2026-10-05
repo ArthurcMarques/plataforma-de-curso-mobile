@@ -10,7 +10,7 @@ describe('PagamentoController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PagamentoController],
       providers: [PagamentoService],
-    }).compile();
+    }).useMocker(() => ({})).compile();
 
     controller = module.get<PagamentoController>(PagamentoController);
   });

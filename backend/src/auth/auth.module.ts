@@ -7,17 +7,17 @@ import { UsuarioModule } from '../usuario/usuario.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from '../prisma/prisma.module';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AccessGuard } from './access.guard';
-import { AccessPolicyService } from './access-policy.service';
-import { ScopedReadInterceptor } from './scoped-read.interceptor';
+import { AccessPolicyModule } from './access-policy.module';
 
 @Module({
   imports: [
     UsuarioModule,
     PrismaModule,
+    AccessPolicyModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -25,10 +25,9 @@ import { ScopedReadInterceptor } from './scoped-read.interceptor';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, AccessPolicyService,
+  providers: [AuthService, JwtStrategy,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: AccessGuard },
-    { provide: APP_INTERCEPTOR, useClass: ScopedReadInterceptor },
   ],
 })
 export class AuthModule {}

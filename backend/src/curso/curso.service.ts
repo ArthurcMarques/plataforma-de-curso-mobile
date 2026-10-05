@@ -1,4 +1,6 @@
 // Persistência de cursos associados a categoria e instrutor. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
+import { AccessPolicyService } from '../auth/access-policy.service';
+import type { SessionUser } from '../auth/session-user';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCursoDto } from './dto/create-curso.dto';
@@ -6,7 +8,7 @@ import { UpdateCursoDto } from './dto/update-curso.dto';
 
 @Injectable()
 export class CursoService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
 
   create(createCursoDto: CreateCursoDto) {
     return this.prisma.curso.create({
@@ -26,13 +28,13 @@ export class CursoService {
     });
   }
 
-  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
-  findAll() {
-    return this.prisma.curso.findMany();
+  // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.
+  findAll(user: SessionUser) {
+    return this.access.read('curso', user, {});
   }
 
-  findOne(id: number) {
-    return this.prisma.curso.findUnique({ where: { ID_Curso: id } });
+  findOne(id: number, user: SessionUser) {
+    return this.access.read('curso', user, { id: String(id) });
   }
 
   update(id: number, updateCursoDto: UpdateCursoDto) {

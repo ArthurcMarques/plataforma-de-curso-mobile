@@ -1,5 +1,6 @@
 // Rotas HTTP de assinaturas que vinculam usuários a planos e períodos de acesso. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { AssinaturaService } from './assinatura.service';
 import { CreateAssinaturaDto } from './dto/create-assinatura.dto';
 import { UpdateAssinaturaDto } from './dto/update-assinatura.dto';
@@ -23,14 +24,14 @@ export class AssinaturaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as assinaturas' })
-  findAll() {
-    return this.assinaturaService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.assinaturaService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma assinatura pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.assinaturaService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.assinaturaService.findOne(+id, request.user);
   }
 
   @Patch(':id')

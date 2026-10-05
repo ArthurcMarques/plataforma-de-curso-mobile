@@ -1,4 +1,6 @@
 // Persistência de matrículas que vinculam usuários aos cursos. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
+import { AccessPolicyService } from '../auth/access-policy.service';
+import type { SessionUser } from '../auth/session-user';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
@@ -6,7 +8,7 @@ import { UpdateMatriculaDto } from './dto/update-matricula.dto';
 
 @Injectable()
 export class MatriculaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
 
   create(createMatriculaDto: CreateMatriculaDto) {
     return this.prisma.matricula.create({
@@ -21,13 +23,13 @@ export class MatriculaService {
     });
   }
 
-  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
-  findAll() {
-    return this.prisma.matricula.findMany();
+  // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.
+  findAll(user: SessionUser) {
+    return this.access.read('matricula', user, {});
   }
 
-  findOne(id: number) {
-    return this.prisma.matricula.findUnique({ where: { ID_Matricula: id } });
+  findOne(id: number, user: SessionUser) {
+    return this.access.read('matricula', user, { id: String(id) });
   }
 
   update(id: number, updateMatriculaDto: UpdateMatriculaDto) {

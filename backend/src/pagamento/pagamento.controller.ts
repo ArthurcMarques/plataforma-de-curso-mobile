@@ -1,5 +1,6 @@
 // Rotas HTTP de pagamentos associados às assinaturas. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PagamentoService } from './pagamento.service';
 import { CreatePagamentoDto } from './dto/create-pagamento.dto';
 import { UpdatePagamentoDto } from './dto/update-pagamento.dto';
@@ -23,14 +24,14 @@ export class PagamentoController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todos os pagamentos' })
-  findAll() {
-    return this.pagamentoService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.pagamentoService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar um pagamento pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.pagamentoService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.pagamentoService.findOne(+id, request.user);
   }
 
   @Patch(':id')

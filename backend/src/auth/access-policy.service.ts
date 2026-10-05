@@ -25,6 +25,13 @@ const resources: Record<string, { model: string; keys: string[] }> = {
 export class AccessPolicyService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Valida IDs antes da conversão numérica feita pelos controllers do tutorial.
+  validateParams(resource: string, params: Record<string, string>) {
+    const config = resources[resource];
+    if (!config) throw new ForbiddenException('Recurso sem política de acesso.');
+    if (Object.keys(params).length) this.keyWhere(config.keys, params);
+  }
+
   private delegate(resource: string): any {
     const config = resources[resource];
     if (!config) throw new ForbiddenException('Recurso sem politica de acesso.');
@@ -88,12 +95,11 @@ export class AccessPolicyService {
 
   private async ownsCourse(id: unknown, user: SessionUser) {
     if (!Number.isInteger(id)) throw new BadRequestException('idCurso deve ser inteiro.');
-    const row = await this.prisma.curso.findFirst({ where: { ID_Curso: id as number, ID_Instrutor: user.userId } });
-    if (!row) {
-      const exists = await this.prisma.curso.findUnique({ where: { ID_Curso: id as number }, select: { ID_Curso: true } });
-      if (!exists) throw new BadRequestException('O curso informado não existe.');
-      throw new ForbiddenException('Curso de outro instrutor.');
-    }
+    const course = await this.prisma.curso.findUnique({
+      where: { ID_Curso: id as number }, select: { ID_Instrutor: true },
+    });
+    if (!course) throw new BadRequestException('O curso informado não existe.');
+    if (course.ID_Instrutor !== user.userId) throw new ForbiddenException('Curso de outro instrutor.');
   }
 
   private async enrolled(id: unknown, user: SessionUser) {
@@ -107,7 +113,7 @@ export class AccessPolicyService {
   // Valida tanto o registro atual quanto o destino dos vínculos enviados em POST/PATCH.
   async authorizeWrite(resource: string, method: string, params: Record<string, string>, body: Record<string, any>, user: SessionUser, handler: string) {
     if (!resources[resource]) throw new ForbiddenException();
-    if (Object.keys(params).length) this.keyWhere(resources[resource].keys, params);
+    this.validateParams(resource, params);
     for (const field of ['idUsuario', 'idCurso', 'idInstrutor', 'idCategoria', 'idModulo', 'idAula', 'idPlano', 'idAssinatura', 'idTrilha']) {
       if (!(field in body) || (field === 'idTrilha' && body[field] === null && resource === 'certificado')) continue;
       if (!Number.isSafeInteger(body[field]) || body[field] <= 0 || body[field] > 2147483647) {

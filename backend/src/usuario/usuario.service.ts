@@ -1,4 +1,6 @@
 // Persistência de contas de usuários e seus perfis de acesso. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
+import { AccessPolicyService } from '../auth/access-policy.service';
+import type { SessionUser } from '../auth/session-user';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -8,7 +10,7 @@ import { PerfilUsuario } from '../generated/prisma/enums';
 
 @Injectable()
 export class UsuarioService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
     const salt = await bcrypt.genSalt();
@@ -33,22 +35,24 @@ export class UsuarioService {
     });
   }
 
+  // Consulta interna da autenticação: nunca devolve o hash da senha.
+  findSessionUser(id: number) {
+    return this.prisma.usuario.findUnique({ where: { ID_Usuario: id }, omit: { SenhaHash: true } });
+  }
+
   updatePerfil(id: number, perfil: PerfilUsuario) {
     return this.prisma.usuario.update({
       where: { ID_Usuario: id }, data: { Perfil: perfil }, omit: { SenhaHash: true },
     });
   }
 
-  // Consulta sem filtro de perfil: no fluxo HTTP protegido, o guard/interceptor fornece a leitura com escopo.
-  findAll() {
-    return this.prisma.usuario.findMany({ omit: { SenhaHash: true } });
+  // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.
+  findAll(user: SessionUser) {
+    return this.access.read('usuario', user, {});
   }
 
-  findOne(id: number) {
-    return this.prisma.usuario.findUnique({
-      where: { ID_Usuario: id },
-      omit: { SenhaHash: true },
-    });
+  findOne(id: number, user: SessionUser) {
+    return this.access.read('usuario', user, { id: String(id) });
   }
 
   async update(id: number, updateUsuarioDto: UpdateUsuarioDto) {

@@ -1,5 +1,6 @@
 // Rotas HTTP de avaliações de cursos com nota de 1 a 5 e comentário. A política global de acesso verifica o perfil e a propriedade dos registros.
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/session-user';
+import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { AvaliacaoService } from './avaliacao.service';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
@@ -23,14 +24,14 @@ export class AvaliacaoController {
 
   @Get()
   @ApiOperation({ summary: 'Listar todas as avaliações' })
-  findAll() {
-    return this.avaliacaoService.findAll();
+  findAll(@Req() request: AuthenticatedRequest) {
+    return this.avaliacaoService.findAll(request.user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar uma avaliação pelo ID' })
-  findOne(@Param('id') id: string) {
-    return this.avaliacaoService.findOne(+id);
+  findOne(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.avaliacaoService.findOne(+id, request.user);
   }
 
   @Patch(':id')
