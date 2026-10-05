@@ -37,6 +37,7 @@ banco antigo e do `frontend/db.json` nao sao importados.
 | Recurso | Endereco padrao |
 | --- | --- |
 | Frontend | http://localhost:8080 |
+| Prisma Studio | http://localhost:5555 |
 | API | http://localhost:3000 |
 | Swagger | http://localhost:3000/api |
 | API via proxy do frontend | http://localhost:8080/backend/ |
@@ -248,7 +249,30 @@ docker compose exec postgres psql -U plataforma -d plataforma_cursos
 Nao use `docker compose down -v` se quiser preservar os dados. Alterar a
 senha no `.env` nao altera a senha de um banco ja inicializado no volume.
 
+## Prisma Studio no Docker
+
+O serviço `prisma-studio` inicia junto com `docker compose up -d --build`.
+Ele utiliza o Dockerfile do backend, substitui o comando da API pelo Studio
+e aguarda a API aplicar as migrations e ficar saudável.
+
+Para iniciar apenas o Studio e suas dependências, execute na raiz:
+
+```powershell
+docker compose up -d --build prisma-studio
+```
+
+Abra http://localhost:5555. A porta pode ser alterada com `PRISMA_STUDIO_PORT`
+no `.env`; se omitida, será 5555. A publicação fica restrita ao computador local.
+O Studio acessa o mesmo banco da API, e suas edições são gravadas nesse banco.
+
+Para encerrar somente o Studio:
+
+```powershell
+docker compose stop prisma-studio
+```
+
 ## Publicar o repositorio (opcional)
+
 
 O repositorio foi criado apenas localmente. Depois de criar um repositorio
 vazio chamado `plataforma-cursos` no seu provedor, execute:

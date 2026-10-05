@@ -51,6 +51,19 @@ services:
       retries: 12
       start_period: 30s
 
+  # Reutiliza o Dockerfile da API, mas executa apenas o Studio neste container.
+  prisma-studio:
+    build: ./backend
+    command: ["./node_modules/.bin/prisma", "studio", "--port", "5555", "--browser", "none"]
+    environment:
+      DATABASE_URL: postgresql://plataforma:${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}@postgres:5432/plataforma_cursos?schema=public
+    ports:
+      - '127.0.0.1:${PRISMA_STUDIO_PORT:-5555}:5555'
+    depends_on:
+      # A API aplica as migrations antes de ficar saudável.
+      api:
+        condition: service_healthy
+
   # Serve o bundle pelo Nginx e encaminha /backend para a API na rede interna.
   frontend:
     build: ./frontend
