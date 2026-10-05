@@ -12,7 +12,11 @@ Abra `http://127.0.0.1:3000/api` (ajuste a porta se necessário).
 O frontend guarda sua sessão separadamente; entrar nele não autentica o Swagger.
 Um token ausente, inválido ou expirado resulta em 401. Refaça o login se expirar.
 A autorização continua dependendo do perfil e da propriedade dos registros.
-O login, o cadastro público e o endpoint raiz continuam públicos.
+O login e o endpoint raiz continuam públicos. O cadastro aceita ausência de token,
+mas, quando Authorization é enviado, valida o token e permite apenas administrador.
+Aluno/instrutor recebe 403; token inválido/expirado recebe 401. Para testar cadastro
+anônimo no Swagger, use Logout em Authorize antes de executar POST /usuario.
+Contas novas sempre recebem ALUNO; a promoção usa PATCH /usuario/{id}/perfil.
 
 Após alterações nos controllers, reconstrua a API na raiz do projeto:
 

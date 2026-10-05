@@ -5,7 +5,7 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { UpdatePerfilDto } from './dto/update-perfil.dto';
-import { Public } from '../auth/public.decorator';
+import { OptionalAuth } from '../auth/public.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('usuario')
@@ -14,10 +14,16 @@ export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
   @Post()
-  @Public()
-  @ApiOperation({ summary: 'Criar um novo usuário' })
+  @OptionalAuth()
+  @ApiOperation({
+    summary: 'Criar um novo usuário',
+    description: 'Sem token: cadastro como aluno. Com token: somente administrador. Token inválido ou expirado retorna 401.',
+    security: [{ token: [] }, {}],
+  })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 401, description: 'Token informado inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: 'Aluno ou instrutor autenticado não pode cadastrar usuários.' })
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
   }

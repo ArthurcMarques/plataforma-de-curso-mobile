@@ -45,6 +45,12 @@ try {
   const otherTeacher = await account('outro-instrutor', 'INSTRUTOR');
   const student = await account('aluno', 'ALUNO');
   const otherStudent = await account('outro-aluno', 'ALUNO');
+  const registration = { name: 'Cadastro de teste', email: `cadastro.${suffix}@example.com`, password: `Teste-${suffix}` };
+  await call('POST', '/usuario', 403, registration, student.token);
+  await call('POST', '/usuario', 403, registration, teacher.token);
+  await call('POST', '/usuario', 401, registration, 'token-invalido');
+  const registered = await create('usuario', 'ID_Usuario', registration, admin);
+  assert.equal(registered.Perfil, 'ALUNO', 'Administrador também cria conta como aluno; promoção usa rota própria.');
   await call('PATCH', `/usuario/${student.id}/perfil`, 403, { perfil: 'ADMINISTRADOR' }, student.token);
   await call('GET', `/usuario/${otherStudent.id}`, 403, undefined, student.token);
   await call('PATCH', `/usuario/${otherStudent.id}`, 403, { name: 'Invadido' }, student.token);
