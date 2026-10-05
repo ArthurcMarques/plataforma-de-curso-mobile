@@ -3,7 +3,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength, ValidateIf } from 'class-validator';
 import { PerfilUsuario } from '../../generated/prisma/enums';
 export class CreateUsuarioDto {
-  @ApiPropertyOptional({ enum: PerfilUsuario, default: 'ALUNO', description: 'Somente administrador autenticado pode escolher outro perfil.' })
+  @ApiPropertyOptional({ enum: PerfilUsuario, default: 'ALUNO', description: 'Perfil escolhido no cadastro público.' })
   @ValidateIf((_object, value) => value !== undefined)
   @IsEnum(PerfilUsuario)
   perfil?: PerfilUsuario;

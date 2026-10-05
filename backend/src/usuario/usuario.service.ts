@@ -1,7 +1,7 @@
 // Persistência de contas de usuários e seus perfis de acesso. Converte os DTOs da API para os campos do Prisma; a autorização HTTP fica em AccessPolicyService.
 import { AccessPolicyService } from '../auth/access-policy.service';
 import type { SessionUser } from '../auth/session-user';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -12,14 +12,8 @@ import { PerfilUsuario } from '../generated/prisma/enums';
 export class UsuarioService {
   constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
 
-  async create(createUsuarioDto: CreateUsuarioDto, actor?: SessionUser) {
+  async create(createUsuarioDto: CreateUsuarioDto) {
     const perfil = createUsuarioDto.perfil ?? PerfilUsuario.ALUNO;
-    if (actor && actor.perfil !== 'ADMINISTRADOR') {
-      throw new ForbiddenException('Somente administradores autenticados podem cadastrar outros usuários.');
-    }
-    if (!actor && perfil !== PerfilUsuario.ALUNO) {
-      throw new ForbiddenException('O cadastro público permite apenas o perfil ALUNO.');
-    }
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(createUsuarioDto.password, salt);
 

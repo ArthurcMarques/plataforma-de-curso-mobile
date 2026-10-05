@@ -1,11 +1,11 @@
 // Rotas HTTP de contas de usuários e seus perfis de acesso. A política global de acesso verifica o perfil e a propriedade dos registros.
-import type { AuthenticatedRequest, SessionUser } from '../auth/session-user';
+import type { AuthenticatedRequest } from '../auth/session-user';
 import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { UpdatePerfilDto } from './dto/update-perfil.dto';
-import { OptionalAuth } from '../auth/public.decorator';
+import { Public } from '../auth/public.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('usuario')
@@ -14,18 +14,16 @@ export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
   @Post()
-  @OptionalAuth()
+  @Public()
   @ApiOperation({
     summary: 'Criar um novo usuário',
-    description: 'Sem token: somente ALUNO. Administrador pode escolher perfil; quando omitido, usa ALUNO. Token inválido ou expirado retorna 401.',
-    security: [{ token: [] }, {}],
+    description: 'Cadastro público com escolha de perfil. Quando omitido, usa ALUNO.',
+    security: [],
   })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
-  @ApiResponse({ status: 401, description: 'Token informado inválido ou expirado.' })
-  @ApiResponse({ status: 403, description: 'Aluno/instrutor autenticado não pode cadastrar; sem token, não pode escolher perfil diferente de ALUNO.' })
-  create(@Body() createUsuarioDto: CreateUsuarioDto, @Req() request: { user?: SessionUser }) {
-    return this.usuarioService.create(createUsuarioDto, request.user);
+  create(@Body() createUsuarioDto: CreateUsuarioDto) {
+    return this.usuarioService.create(createUsuarioDto);
   }
 
   @ApiBearerAuth('token')

@@ -73,8 +73,9 @@ instrucoes anteriores; este README descreve o Compose.
 ## Areas e permissoes
 
 O login consulta `/auth/me` e direciona para `/aluno`, `/instrutor` ou
-`/administrador`. O cadastro publico sempre cria ALUNO, mesmo que a requisicao
-envie outro perfil. Perfis sao conferidos no banco a cada requisicao autenticada.
+`/administrador`. O cadastro publico aceita escolher ALUNO, INSTRUTOR ou
+ADMINISTRADOR, sem token; quando omitido, usa ALUNO. Perfis sao conferidos no
+banco a cada requisicao autenticada.
 
 | Perfil | Area e permissoes |
 | --- | --- |

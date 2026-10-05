@@ -46,15 +46,14 @@ try {
   const student = await account('aluno', 'ALUNO');
   const otherStudent = await account('outro-aluno', 'ALUNO');
   const registration = { name: 'Cadastro de teste', email: `cadastro.${suffix}@example.com`, password: `Teste-${suffix}` };
-  await call('POST', '/usuario', 403, registration, student.token);
-  await call('POST', '/usuario', 403, registration, teacher.token);
-  await call('POST', '/usuario', 401, registration, 'token-invalido');
+  for (const [index, token] of [student.token, teacher.token, 'token-invalido'].entries()) {
+    await create('usuario', 'ID_Usuario', { ...registration, email: `publico.${index}.${suffix}@example.com` }, token);
+  }
   const registered = await create('usuario', 'ID_Usuario', registration, admin);
   assert.equal(registered.Perfil, 'ALUNO', 'Perfil omitido deve assumir ALUNO.');
   for (const perfil of ['ALUNO', 'INSTRUTOR', 'ADMINISTRADOR']) {
     const body = { ...registration, email: `${perfil}.${suffix}@example.com`, perfil };
-    if (perfil !== 'ALUNO') await call('POST', '/usuario', 403, body, null);
-    const row = await create('usuario', 'ID_Usuario', body, admin);
+    const row = await create('usuario', 'ID_Usuario', body, null);
     assert.equal(row.Perfil, perfil);
     const login = await call('POST', '/auth/login', 200, { email: body.email, password: body.password }, null);
     const me = await call('GET', '/auth/me', 200, undefined, login.access_token);

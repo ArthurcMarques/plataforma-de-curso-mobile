@@ -1,11 +1,15 @@
-import { ForbiddenException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { Test } from '@nestjs/testing';
 import { UsuarioService } from './usuario.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessPolicyService } from '../auth/access-policy.service';
-import type { SessionUser } from '../auth/session-user';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
+import { UsuarioController } from './usuario.controller';
+import { PUBLIC_ROUTE } from '../auth/public.decorator';
+import { Reflector } from '@nestjs/core';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AccessGuard } from '../auth/access.guard';
+import type { ExecutionContext } from '@nestjs/common';
 
 jest.mock('bcrypt', () => ({
   genSalt: jest.fn().mockResolvedValue('salt'),
@@ -16,8 +20,19 @@ describe('Cadastro com perfil', () => {
   let service: UsuarioService;
   const create = jest.fn().mockResolvedValue({ ID_Usuario: 1 });
   const body = { name: 'Ana Silva', email: 'ana@example.com', password: '123456' };
-  const actor = (perfil: SessionUser['perfil']): SessionUser => ({
-    userId: 10, name: 'Administrador', email: 'admin@example.com', perfil,
+
+  it('rota de cadastro dispensa autenticacao e autorizacao', async () => {
+    const handler = UsuarioController.prototype.create;
+    expect(Reflect.getMetadata(PUBLIC_ROUTE, handler)).toBe(true);
+    const context = {
+      getHandler: () => handler,
+      getClass: () => UsuarioController,
+    } as unknown as ExecutionContext;
+    const reflector = new Reflector();
+    expect(new JwtAuthGuard(reflector).canActivate(context)).toBe(true);
+    const policy = { authorizeWrite: jest.fn() };
+    await expect(new AccessGuard(reflector, policy as unknown as AccessPolicyService).canActivate(context)).resolves.toBe(true);
+    expect(policy.authorizeWrite).not.toHaveBeenCalled();
   });
 
   beforeEach(async () => {
@@ -30,34 +45,23 @@ describe('Cadastro com perfil', () => {
     service = module.get(UsuarioService);
   });
 
-  it.each(['ALUNO', 'INSTRUTOR', 'ADMINISTRADOR'] as const)('administrador cria %s', async perfil => {
-    await service.create({ ...body, perfil }, actor('ADMINISTRADOR'));
+  it.each(['ALUNO', 'INSTRUTOR', 'ADMINISTRADOR'] as const)('cadastro publico cria %s', async perfil => {
+    await service.create({ ...body, perfil });
     expect(create).toHaveBeenCalledWith({
       data: { NomeCompleto: body.name, Email: body.email, SenhaHash: 'hashed-password', Perfil: perfil },
       omit: { SenhaHash: true },
     });
   });
 
-  it('cadastro publico e administrador assumem ALUNO quando omitido', async () => {
+  it('cadastro publico assume ALUNO quando omitido', async () => {
     await service.create(body);
-    await service.create(body, actor('ADMINISTRADOR'));
     for (const [options] of create.mock.calls) expect(options.data.Perfil).toBe('ALUNO');
-    expect(create).toHaveBeenCalledTimes(2);
+    expect(create).toHaveBeenCalledTimes(1);
   });
 
   it('cadastro publico aceita ALUNO explicito', async () => {
     await service.create({ ...body, perfil: 'ALUNO' });
     expect(create).toHaveBeenCalledTimes(1);
-  });
-
-  it.each(['INSTRUTOR', 'ADMINISTRADOR'] as const)('cadastro publico rejeita %s sem inserir', async perfil => {
-    await expect(service.create({ ...body, perfil })).rejects.toBeInstanceOf(ForbiddenException);
-    expect(create).not.toHaveBeenCalled();
-  });
-
-  it.each(['ALUNO', 'INSTRUTOR'] as const)('token de %s nao pode cadastrar', async perfil => {
-    await expect(service.create(body, actor(perfil))).rejects.toBeInstanceOf(ForbiddenException);
-    expect(create).not.toHaveBeenCalled();
   });
 
   it.each([null, 'INVALIDO'])('DTO rejeita perfil %s', async perfil => {
