@@ -1,5 +1,5 @@
 // Hook que concentra dados, loading, alertas e operacoes de CRUD.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AppData, CollectionName, RecordId } from "../models/types";
 import { createRecord, deleteRecord, emptyAppData, fetchAppData, updateRecord } from "../services/api";
 
@@ -12,27 +12,40 @@ export function useAppData() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [alert, setAlert] = useState<AlertState>(null);
+    const loadController = useRef<AbortController | null>(null);
+    const alertTimer = useRef<number | undefined>(undefined);
 
     useEffect(() => {
         void refreshData();
+        return () => {
+            loadController.current?.abort();
+            window.clearTimeout(alertTimer.current);
+        };
     }, []);
 
     // Carrega todas as colecoes da API.
     async function refreshData() {
+        loadController.current?.abort();
+        const controller = new AbortController();
+        loadController.current = controller;
         setLoading(true);
         try {
-            setData(await fetchAppData());
+            const loaded = await fetchAppData(controller.signal);
+            if (controller.signal.aborted) return;
+            setData(loaded);
             setError(null);
         } catch (error) {
+            if (controller.signal.aborted) return;
             setError(error instanceof Error ? error.message : "Não foi possível carregar os dados da API.");
         } finally {
-            setLoading(false);
+            if (!controller.signal.aborted) setLoading(false);
         }
     }
 
     function notify(message: string, type: "success" | "warning" | "danger" = "success") {
+        window.clearTimeout(alertTimer.current);
         setAlert({ message, type });
-        window.setTimeout(() => setAlert(null), 2800);
+        alertTimer.current = window.setTimeout(() => setAlert(null), 2800);
     }
 
     async function addWithId(name: CollectionName, record: any) {

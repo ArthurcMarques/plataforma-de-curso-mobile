@@ -60,14 +60,12 @@ export function emptyAppData(): AppData {
 }
 
 // Carrega todas as colecoes usadas pela aplicacao.
-export async function fetchAppData(): Promise<AppData> {
-    const data = emptyAppData();
-
-    for (const name of collections) {
-        (data as any)[name] = validateCollection(name, await request<any[]>(recordPath(name)));
-    }
-
-    return data;
+export async function fetchAppData(signal?: AbortSignal): Promise<AppData> {
+    // As coleções são independentes; só publica o conjunto se todas forem válidas.
+    const entries = await Promise.all(collections.map(async name => [
+        name, validateCollection(name, await request<any[]>(recordPath(name), { signal }))
+    ]));
+    return Object.fromEntries(entries) as AppData;
 }
 
 export async function createRecord(name: CollectionName, record: AnyRecord): Promise<AnyRecord> {
@@ -105,13 +103,15 @@ async function request<T>(path: string, init?: RequestInit, authenticated = true
     let response: Response;
     try {
         response = await fetch(`${API_URL}${path}`, { ...init, headers });
-    } catch {
+    } catch (error) {
+        if (init?.signal?.aborted) throw error;
         throw new Error("Não foi possível conectar à API. Tente novamente.");
     }
 
     if (!response.ok) {
         if (response.status === 401 && authenticated) {
-            logout();
+            // Uma resposta atrasada não pode encerrar uma sessão iniciada depois desta requisição.
+            if (token === getToken()) logout();
             throw new Error("Sessão expirada. Entre novamente.");
         }
         const body = await response.json().catch(() => ({}));
@@ -127,6 +127,7 @@ async function request<T>(path: string, init?: RequestInit, authenticated = true
 }
 
 function validateCollection(name: CollectionName, records: AnyRecord[]) {
+    if (!Array.isArray(records)) throw new Error(`A API retornou uma lista inválida para ${name}.`);
     // Garante que cada item recebido respeita o schema do model.
     return records.map((record) => validateRecord(name, record));
 }

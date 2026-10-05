@@ -38,17 +38,18 @@ export function ActionButton({ children, danger = false, disabled = false, onCli
 }
 
 // Select simples reutilizado em formularios menores.
-export function SelectInput({ label, value, options, required, onChange }: {
+export function SelectInput({ label, value, options, required, disabled = false, onChange }: {
     label: string;
     value: string;
     options: Array<{ value: string | number; label: string }>;
+    disabled?: boolean;
     required?: boolean;
     onChange: (value: string) => void;
 }) {
     return (
         <div className="col-12 col-md-6">
             <label className="form-label">{label}</label>
-            <select className="form-select" value={value} required={required} onChange={(event) => onChange(event.target.value)}>
+            <select className="form-select" value={value} required={required} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
                 <option value="">Selecione</option>
                 {options.map((option) => <option value={option.value} key={option.value}>{option.label}</option>)}
             </select>

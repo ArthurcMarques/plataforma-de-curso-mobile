@@ -1,5 +1,5 @@
 // Pagina de progresso: marca aulas concluidas por aluno.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import type { Curso, RecordId } from "../models/types";
 import { nameById, normalize, sameId, todayISO } from "../utils";
@@ -8,6 +8,8 @@ import { SelectInput } from "./shared";
 
 export function ProgressPage({ data, addDirect, removeDirect, notify }: PageProps) {
     const [selectedUserId, setSelectedUserId] = useState("");
+    const [saving, setSaving] = useState(false);
+    const pending = useRef(false);
     const idUsuario = selectedUserId;
     const selectedUser = data.usuarios.find((item) => sameId(item.id, idUsuario));
 
@@ -19,20 +21,22 @@ export function ProgressPage({ data, addDirect, removeDirect, notify }: PageProp
     }
 
     async function toggleLesson(idAula: RecordId, checked: boolean) {
+        if (pending.current) return;
         // Cria ou remove o progresso conforme o checkbox.
         if (!idUsuario) {
             notify("Selecione um aluno antes de marcar aulas.", "danger");
             return;
         }
 
-        const current = data.progressoAulas.find((item) => sameId(item.idUsuario, idUsuario) && sameId(item.idAula, idAula));
-        if (!checked && current) {
-            await removeDirect("progressoAulas", current.id);
-            return;
-        }
-
-        if (checked && !current) {
-            await addDirect("progressoAulas", { idUsuario, idAula, status: "Concluído", dataConclusao: todayISO() });
+        pending.current = true;
+        setSaving(true);
+        try {
+            const current = data.progressoAulas.find((item) => sameId(item.idUsuario, idUsuario) && sameId(item.idAula, idAula));
+            if (!checked && current) await removeDirect("progressoAulas", current.id);
+            if (checked && !current) await addDirect("progressoAulas", { idUsuario, idAula, status: "Concluído", dataConclusao: todayISO() });
+        } finally {
+            pending.current = false;
+            setSaving(false);
         }
     }
 
@@ -54,6 +58,7 @@ export function ProgressPage({ data, addDirect, removeDirect, notify }: PageProp
                         required
                         options={data.usuarios.map((item) => ({ value: item.id, label: item.nomeCompleto }))}
                         onChange={setSelectedUserId}
+                        disabled={saving}
                     />
                     <div className="col-12 col-md-6">
                         <p className="progress-summary mb-0">
@@ -92,7 +97,7 @@ export function ProgressPage({ data, addDirect, removeDirect, notify }: PageProp
                                                     <label className="lesson-checkbox" key={lesson.id}>
                                                         <input
                                                             type="checkbox"
-                                                            disabled={!idUsuario}
+                                                            disabled={!idUsuario || saving}
                                                             checked={idUsuario ? isLessonDone(lesson.id) : false}
                                                             onChange={(event) => toggleLesson(lesson.id, event.target.checked)}
                                                         />
