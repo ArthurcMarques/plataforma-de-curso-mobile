@@ -52,16 +52,13 @@ export function UsersPage({ data, addDirect, updateById, removeById, notify, nav
             if (targetId !== null) {
                 if (!await updateById("usuarios", targetId, user)) return;
             } else {
-                const saved = await addDirect("usuarios", user);
+                const saved = await addDirect("usuarios", { ...user, perfil });
                 if (!saved) return;
                 targetId = saved.id;
-                // Se a promocao falhar, a proxima tentativa edita esta conta, sem duplicar.
-                setEditingId(saved.id);
-                setDataCadastro(saved.dataCadastro);
             }
             setSenha("");
-            if (targetId !== null && perfil !== originalPerfil) {
-                try { await updateProfile(targetId, perfil); }
+            if (editingId !== null && perfil !== originalPerfil) {
+                try { await updateProfile(editingId, perfil); }
                 catch (error) {
                     notify(`Os dados foram salvos, mas o perfil não foi alterado: ${error instanceof Error ? error.message : "tente novamente"}`, "danger");
                     return;

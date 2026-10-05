@@ -71,7 +71,7 @@ export async function fetchAppData(signal?: AbortSignal): Promise<AppData> {
 export async function createRecord(name: CollectionName, record: AnyRecord): Promise<AnyRecord> {
     const saved = await request<AnyRecord>(recordPath(name), {
         method: "POST",
-        body: JSON.stringify(toApi(name, record))
+        body: JSON.stringify(toApi(name, record, 'create'))
     });
 
     return validateRecord(name, saved);

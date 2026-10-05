@@ -115,9 +115,9 @@ Validacoes manuais adicionais (nao executadas durante a alteracao):
    o perfil apos recarregar e fazer login com a nova conta. Filtre a listagem por
    perfil. Ao editar sua propria conta, nao deve ser possivel mudar seu perfil
    nem aparecer a acao de exclui-la.
-5. Simule falha na requisicao de alteracao de perfil apos criar uma conta (por
-   exemplo, bloqueando essa URL no DevTools). O aviso deve indicar que a conta
-   foi salva; uma nova tentativa deve editar o mesmo ID, sem novo POST de usuario.
+5. Ao criar uma conta, confira no DevTools um unico POST /usuario contendo perfil,
+   sem PATCH posterior. Na edicao de uma conta existente, mudar o perfil ainda
+   usa PATCH /usuario/{id}/perfil; uma falha deve manter o formulario para tentar novamente.
 6. Nos tres perfis, use Minha conta para editar nome/email, mantendo a senha em
    branco. Confira que o nome no topo e atualizado. Senhas diferentes devem
    impedir o envio; com senhas iguais, confira o login com a nova senha.

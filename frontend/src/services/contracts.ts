@@ -51,11 +51,12 @@ export function fromApi(name: CollectionName, record: Row): Row {
     return result;
 }
 // Envia apenas campos do contrato, converte IDs/números e serializa datas em ISO.
-export function toApi(name: CollectionName, record: Row): Row {
+export function toApi(name: CollectionName, record: Row, operation: 'create' | 'update' = 'update'): Row {
     if (name === "usuarios") return {
         ...(record.nomeCompleto !== undefined ? { name: record.nomeCompleto } : {}),
         ...(record.email !== undefined ? { email: record.email } : {}),
-        ...(record.senha ? { password: record.senha } : {})
+        ...(record.senha ? { password: record.senha } : {}),
+        ...(operation === 'create' && record.perfil !== undefined ? { perfil: record.perfil } : {})
     };
     const result: Row = {};
     for (const field of contracts[name].fields) {

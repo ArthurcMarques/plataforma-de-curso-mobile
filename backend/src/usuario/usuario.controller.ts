@@ -1,5 +1,5 @@
 // Rotas HTTP de contas de usuários e seus perfis de acesso. A política global de acesso verifica o perfil e a propriedade dos registros.
-import type { AuthenticatedRequest } from '../auth/session-user';
+import type { AuthenticatedRequest, SessionUser } from '../auth/session-user';
 import { Req, Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -17,15 +17,15 @@ export class UsuarioController {
   @OptionalAuth()
   @ApiOperation({
     summary: 'Criar um novo usuário',
-    description: 'Sem token: cadastro como aluno. Com token: somente administrador. Token inválido ou expirado retorna 401.',
+    description: 'Sem token: somente ALUNO. Administrador pode escolher perfil; quando omitido, usa ALUNO. Token inválido ou expirado retorna 401.',
     security: [{ token: [] }, {}],
   })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
   @ApiResponse({ status: 401, description: 'Token informado inválido ou expirado.' })
-  @ApiResponse({ status: 403, description: 'Aluno ou instrutor autenticado não pode cadastrar usuários.' })
-  create(@Body() createUsuarioDto: CreateUsuarioDto) {
-    return this.usuarioService.create(createUsuarioDto);
+  @ApiResponse({ status: 403, description: 'Aluno/instrutor autenticado não pode cadastrar; sem token, não pode escolher perfil diferente de ALUNO.' })
+  create(@Body() createUsuarioDto: CreateUsuarioDto, @Req() request: { user?: SessionUser }) {
+    return this.usuarioService.create(createUsuarioDto, request.user);
   }
 
   @ApiBearerAuth('token')

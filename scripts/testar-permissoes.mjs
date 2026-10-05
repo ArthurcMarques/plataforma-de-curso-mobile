@@ -27,7 +27,7 @@ async function create(route, key, body, token = admin) {
 async function account(label, perfil) {
   const email = `${label}.${suffix}@example.com`;
   const password = `Teste-${suffix}`;
-  const row = await create('usuario', 'ID_Usuario', { name: label, email, password, perfil: 'ADMINISTRADOR' }, null);
+  const row = await create('usuario', 'ID_Usuario', { name: label, email, password }, null);
   assert.equal(row.Perfil, 'ALUNO', 'Cadastro publico nao pode elevar privilegios.');
   const login = await call('POST', '/auth/login', 200, { email, password }, null);
   if (perfil !== 'ALUNO') await call('PATCH', `/usuario/${row.ID_Usuario}/perfil`, 200, { perfil });
@@ -50,7 +50,19 @@ try {
   await call('POST', '/usuario', 403, registration, teacher.token);
   await call('POST', '/usuario', 401, registration, 'token-invalido');
   const registered = await create('usuario', 'ID_Usuario', registration, admin);
-  assert.equal(registered.Perfil, 'ALUNO', 'Administrador também cria conta como aluno; promoção usa rota própria.');
+  assert.equal(registered.Perfil, 'ALUNO', 'Perfil omitido deve assumir ALUNO.');
+  for (const perfil of ['ALUNO', 'INSTRUTOR', 'ADMINISTRADOR']) {
+    const body = { ...registration, email: `${perfil}.${suffix}@example.com`, perfil };
+    if (perfil !== 'ALUNO') await call('POST', '/usuario', 403, body, null);
+    const row = await create('usuario', 'ID_Usuario', body, admin);
+    assert.equal(row.Perfil, perfil);
+    const login = await call('POST', '/auth/login', 200, { email: body.email, password: body.password }, null);
+    const me = await call('GET', '/auth/me', 200, undefined, login.access_token);
+    assert.equal(me.perfil, perfil);
+  }
+  for (const perfil of [null, 'INVALIDO']) {
+    await call('POST', '/usuario', 400, { ...registration, perfil }, admin);
+  }
   await call('PATCH', `/usuario/${student.id}/perfil`, 403, { perfil: 'ADMINISTRADOR' }, student.token);
   await call('GET', `/usuario/${otherStudent.id}`, 403, undefined, student.token);
   await call('PATCH', `/usuario/${otherStudent.id}`, 403, { name: 'Invadido' }, student.token);

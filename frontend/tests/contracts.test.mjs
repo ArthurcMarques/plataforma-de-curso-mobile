@@ -25,6 +25,12 @@ test("usuario nao expoe senha e nao envia senha vazia na edicao", () => {
     });
 });
 
+test("perfil segue no cadastro e usa rota separada na edicao", () => {
+    const user = { nomeCompleto: "Ana", perfil: "INSTRUTOR" };
+    assert.deepEqual(toApi("usuarios", user, "create"), { name: "Ana", perfil: "INSTRUTOR" });
+    assert.deepEqual(toApi("usuarios", user), { name: "Ana" });
+});
+
 test("curso converte IDs, enum e data sem enviar campos extras", () => {
     assert.deepEqual(toApi("cursos", {
         id: 8, idCategoria: "2", idInstrutor: "3", nivel: "Avançado",

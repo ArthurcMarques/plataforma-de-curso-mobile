@@ -1,7 +1,13 @@
 // Contrato de entrada para contas de usuários e seus perfis de acesso. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength, ValidateIf } from 'class-validator';
+import { PerfilUsuario } from '../../generated/prisma/enums';
 export class CreateUsuarioDto {
+  @ApiPropertyOptional({ enum: PerfilUsuario, default: 'ALUNO', description: 'Somente administrador autenticado pode escolher outro perfil.' })
+  @ValidateIf((_object, value) => value !== undefined)
+  @IsEnum(PerfilUsuario)
+  perfil?: PerfilUsuario;
+
   @ApiProperty({ example: 'joao@email.com', description: 'O email do usuário' })
   @IsEmail()
     email!: string;

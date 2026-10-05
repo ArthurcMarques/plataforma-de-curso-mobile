@@ -16,7 +16,10 @@ O login e o endpoint raiz continuam públicos. O cadastro aceita ausência de to
 mas, quando Authorization é enviado, valida o token e permite apenas administrador.
 Aluno/instrutor recebe 403; token inválido/expirado recebe 401. Para testar cadastro
 anônimo no Swagger, use Logout em Authorize antes de executar POST /usuario.
-Contas novas sempre recebem ALUNO; a promoção usa PATCH /usuario/{id}/perfil.
+No POST /usuario, o campo opcional perfil aceita ALUNO, INSTRUTOR ou ADMINISTRADOR.
+Sem token, apenas ALUNO é permitido; outro perfil retorna 403. Um administrador
+pode escolher qualquer perfil na criação. Se omitido, o perfil será ALUNO.
+Para alterar o perfil de uma conta existente, use PATCH /usuario/{id}/perfil.
 
 Após alterações nos controllers, reconstrua a API na raiz do projeto:
 
