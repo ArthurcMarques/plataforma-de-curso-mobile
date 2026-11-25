@@ -6,10 +6,12 @@ import type { SessionUser } from './session-user';
 describe('AccessPolicyService: erros e escopo', () => {
   const student: SessionUser = { userId: 1, name: 'Aluno', email: 'aluno@example.com', perfil: 'ALUNO' };
   let delegate: { findFirst: jest.Mock; findMany: jest.Mock };
+  let assinaturaDelegate: { findUnique: jest.Mock };
   let policy: AccessPolicyService;
   beforeEach(() => {
     delegate = { findFirst: jest.fn(), findMany: jest.fn() };
-    policy = new AccessPolicyService({ usuario: delegate, progressoAula: delegate } as unknown as PrismaService);
+    assinaturaDelegate = { findUnique: jest.fn() };
+    policy = new AccessPolicyService({ usuario: delegate, progressoAula: delegate, assinatura: assinaturaDelegate } as unknown as PrismaService);
   });
   it('retorna o registro permitido sem consulta extra', async () => {
     delegate.findFirst.mockResolvedValue({ ID_Usuario: 1 });
@@ -41,5 +43,23 @@ describe('AccessPolicyService: erros e escopo', () => {
   });
   it('valida parâmetros antes da escrita administrativa', async () => {
     await expect(policy.authorizeWrite('usuario', 'PATCH', { id: 'abc' }, {}, { ...student, perfil: 'ADMINISTRADOR' }, 'update')).rejects.toBeInstanceOf(BadRequestException);
+  });
+  it('aluno cria assinatura em seu próprio nome', async () => {
+    await expect(policy.authorizeWrite('assinatura', 'POST', {}, { idUsuario: 1, idPlano: 2, dataInicio: '2026-01-01T00:00:00.000Z', dataFim: '2026-02-01T00:00:00.000Z' }, student, 'create')).resolves.toBeUndefined();
+  });
+  it('aluno não pode criar assinatura em nome de outro usuário', async () => {
+    await expect(policy.authorizeWrite('assinatura', 'POST', {}, { idUsuario: 2, idPlano: 2, dataInicio: '2026-01-01T00:00:00.000Z', dataFim: '2026-02-01T00:00:00.000Z' }, student, 'create')).rejects.toBeInstanceOf(ForbiddenException);
+  });
+  it('aluno cria pagamento referenciando a própria assinatura', async () => {
+    assinaturaDelegate.findUnique.mockResolvedValue({ ID_Usuario: 1 });
+    await expect(policy.authorizeWrite('pagamento', 'POST', {}, { idAssinatura: 5, valorPago: 10, dataPagamento: '2026-01-01T00:00:00.000Z', metodoPagamento: 'PIX', idTransacaoGateway: 'abc' }, student, 'create')).resolves.toBeUndefined();
+  });
+  it('aluno não pode criar pagamento referenciando assinatura de outro usuário', async () => {
+    assinaturaDelegate.findUnique.mockResolvedValue({ ID_Usuario: 2 });
+    await expect(policy.authorizeWrite('pagamento', 'POST', {}, { idAssinatura: 5, valorPago: 10, dataPagamento: '2026-01-01T00:00:00.000Z', metodoPagamento: 'PIX', idTransacaoGateway: 'abc' }, student, 'create')).rejects.toBeInstanceOf(ForbiddenException);
+  });
+  it('aluno não pode criar pagamento referenciando assinatura inexistente', async () => {
+    assinaturaDelegate.findUnique.mockResolvedValue(null);
+    await expect(policy.authorizeWrite('pagamento', 'POST', {}, { idAssinatura: 5, valorPago: 10, dataPagamento: '2026-01-01T00:00:00.000Z', metodoPagamento: 'PIX', idTransacaoGateway: 'abc' }, student, 'create')).rejects.toBeInstanceOf(BadRequestException);
   });
 });

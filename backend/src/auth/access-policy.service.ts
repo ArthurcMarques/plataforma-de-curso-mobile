@@ -19,6 +19,7 @@ const resources: Record<string, { model: string; keys: string[] }> = {
   plano: { model: 'plano', keys: ['ID_Plano'] },
   assinatura: { model: 'assinatura', keys: ['ID_Assinatura'] },
   pagamento: { model: 'pagamento', keys: ['ID_Pagamento'] },
+  notificacao: { model: 'notificacao', keys: ['ID_Notificacao'] },
 };
 
 @Injectable()
@@ -60,6 +61,7 @@ export class AccessPolicyService {
       case 'progresso-aula': return user.perfil === 'INSTRUTOR' ? { aula: { modulo: { curso: course } } } : own;
       case 'assinatura': return own;
       case 'pagamento': return { assinatura: own };
+      case 'notificacao': return own;
       default: throw new ForbiddenException();
     }
   }
@@ -102,6 +104,15 @@ export class AccessPolicyService {
     if (course.ID_Instrutor !== user.userId) throw new ForbiddenException('Curso de outro instrutor.');
   }
 
+  private async ownsSubscription(id: unknown, user: SessionUser) {
+    if (!Number.isInteger(id)) throw new BadRequestException('idAssinatura deve ser inteiro.');
+    const subscription = await this.prisma.assinatura.findUnique({
+      where: { ID_Assinatura: id as number }, select: { ID_Usuario: true },
+    });
+    if (!subscription) throw new BadRequestException('A assinatura informada não existe.');
+    if (subscription.ID_Usuario !== user.userId) throw new ForbiddenException('Assinatura de outro usuário.');
+  }
+
   private async enrolled(id: unknown, user: SessionUser) {
     if (!Number.isInteger(id)) throw new BadRequestException('idCurso deve ser inteiro.');
     const course = await this.prisma.curso.findUnique({ where: { ID_Curso: id as number }, select: { ID_Curso: true } });
@@ -140,7 +151,9 @@ export class AccessPolicyService {
     const studentWrite = user.perfil === 'ALUNO' && (
       (resource === 'matricula' && method === 'POST') ||
       (resource === 'progresso-aula' && ['POST', 'DELETE'].includes(method)) ||
-      (resource === 'avaliacao' && ['POST', 'PATCH', 'DELETE'].includes(method))
+      (resource === 'avaliacao' && ['POST', 'PATCH', 'DELETE'].includes(method)) ||
+      (resource === 'assinatura' && method === 'POST') ||
+      (resource === 'pagamento' && method === 'POST')
     );
     if (!instructorWrite && !studentWrite) throw new ForbiddenException('Seu perfil nao permite esta operacao.');
     let existing: Record<string, any> | undefined;
@@ -160,8 +173,9 @@ export class AccessPolicyService {
       }
       return;
     }
-    // O aluno só pode criar ou alterar vínculos em seu próprio nome.
-    if ((body.idUsuario ?? existing?.ID_Usuario) !== user.userId) throw new ForbiddenException('Nao e permitido agir em nome de outro aluno.');
+    // O aluno só pode criar ou alterar vínculos em seu próprio nome; pagamento não tem idUsuario direto, valida pela assinatura.
+    if (resource !== 'pagamento' && (body.idUsuario ?? existing?.ID_Usuario) !== user.userId) throw new ForbiddenException('Nao e permitido agir em nome de outro aluno.');
+    if (resource === 'pagamento') await this.ownsSubscription(body.idAssinatura, user);
     if (resource === 'matricula') {
       if (body.dataConclusao != null) throw new ForbiddenException('Conclusao da matricula exige administrador.');
       if (!Number.isInteger(body.idCurso)) throw new BadRequestException('idCurso deve ser inteiro.');

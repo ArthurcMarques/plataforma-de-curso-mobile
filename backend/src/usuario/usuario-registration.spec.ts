@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { UsuarioService } from './usuario.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessPolicyService } from '../auth/access-policy.service';
+import { KafkaProducerService } from '../messaging/kafka-producer.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UsuarioController } from './usuario.controller';
 import { PUBLIC_ROUTE } from '../auth/public.decorator';
@@ -18,8 +19,8 @@ jest.mock('bcrypt', () => ({
 
 describe('Cadastro com perfil', () => {
   let service: UsuarioService;
-  const create = jest.fn().mockResolvedValue({ ID_Usuario: 1 });
   const body = { name: 'Ana Silva', email: 'ana@example.com', password: '123456' };
+  const create = jest.fn().mockResolvedValue({ ID_Usuario: 1, NomeCompleto: body.name, Email: body.email, DataCadastro: new Date('2026-01-01T00:00:00.000Z') });
 
   it('rota de cadastro dispensa autenticacao e autorizacao', async () => {
     const handler = UsuarioController.prototype.create;
@@ -41,6 +42,7 @@ describe('Cadastro com perfil', () => {
       UsuarioService,
       { provide: PrismaService, useValue: { usuario: { create } } },
       { provide: AccessPolicyService, useValue: {} },
+      { provide: KafkaProducerService, useValue: { publishUsuarioCriado: jest.fn() } },
     ] }).compile();
     service = module.get(UsuarioService);
   });

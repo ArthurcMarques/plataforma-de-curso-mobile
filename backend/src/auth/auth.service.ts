@@ -24,6 +24,11 @@ export class AuthService {
       throw new UnauthorizedException('E-mail ou senha incorretos');
     }
 
+    // Mantém o token de push atual mesmo em reinstalação/troca de dispositivo; nunca bloqueia o login.
+    if (loginDto.pushToken) {
+      await this.usuarioService.updatePushToken(usuario.ID_Usuario, loginDto.pushToken).catch(() => undefined);
+    }
+
     const payload: JwtPayload = {
       sub: usuario.ID_Usuario,
       email: usuario.Email,

@@ -25,13 +25,16 @@ model Usuario {
   SenhaHash    String
   DataCadastro DateTime @default(now())
   Perfil       PerfilUsuario @default(ALUNO)
+  // Token do Expo Push para notificações reais; preenchido no cadastro/login quando o app tem permissão.
+  PushToken    String?
 
-  cursos       Curso[]
-  matriculas   Matricula[]
-  progressos   ProgressoAula[]
-  avaliacoes   Avaliacao[]
-  certificados Certificado[]
-  assinaturas  Assinatura[]
+  cursos        Curso[]
+  matriculas    Matricula[]
+  progressos    ProgressoAula[]
+  avaliacoes    Avaliacao[]
+  certificados  Certificado[]
+  assinaturas   Assinatura[]
+  notificacoes  Notificacao[]
 }
 
 
@@ -266,6 +269,23 @@ model Pagamento {
   Id_Transacao_Gateway String
 
   assinatura Assinatura @relation(fields: [ID_Assinatura], references: [ID_Assinatura])
+}
+
+
+// ==============================
+// NOTIFICACOES
+// ==============================
+
+// Mensagem gerada por processos internos (ex.: boas-vindas via consumer Kafka); não há escrita pela API pública.
+model Notificacao {
+  ID_Notificacao Int      @id @default(autoincrement())
+  ID_Usuario     Int
+  Mensagem       String
+  Tipo           String   @default("BOAS_VINDAS")
+  DataEnvio      DateTime @default(now())
+  Lida           Boolean  @default(false)
+
+  usuario Usuario @relation(fields: [ID_Usuario], references: [ID_Usuario])
 }
 
 

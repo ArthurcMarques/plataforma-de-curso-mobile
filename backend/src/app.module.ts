@@ -19,10 +19,11 @@ import { CertificadoModule } from './certificado/certificado.module';
 import { PlanoModule } from './plano/plano.module';
 import { AssinaturaModule } from './assinatura/assinatura.module';
 import { PagamentoModule } from './pagamento/pagamento.module';
+import { NotificacaoModule } from './notificacao/notificacao.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, UsuarioModule, CategoriaModule, CursoModule, ModuloModule, AulaModule, MatriculaModule, ProgressoAulaModule, AvaliacaoModule, TrilhaModule, TrilhaCursoModule, CertificadoModule, PlanoModule, AssinaturaModule, PagamentoModule, AuthModule],
+  imports: [PrismaModule, UsuarioModule, CategoriaModule, CursoModule, ModuloModule, AulaModule, MatriculaModule, ProgressoAulaModule, AvaliacaoModule, TrilhaModule, TrilhaCursoModule, CertificadoModule, PlanoModule, AssinaturaModule, PagamentoModule, NotificacaoModule, AuthModule],
   controllers: [AppController],
   providers: [AppService, { provide: APP_FILTER, useClass: PrismaExceptionFilter }],
 })

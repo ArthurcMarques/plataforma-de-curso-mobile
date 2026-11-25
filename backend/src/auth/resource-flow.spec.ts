@@ -14,6 +14,8 @@ import { MatriculaModule } from '../matricula/matricula.module';
 import { MatriculaController } from '../matricula/matricula.controller';
 import { ModuloModule } from '../modulo/modulo.module';
 import { ModuloController } from '../modulo/modulo.controller';
+import { NotificacaoModule } from '../notificacao/notificacao.module';
+import { NotificacaoController } from '../notificacao/notificacao.controller';
 import { PagamentoModule } from '../pagamento/pagamento.module';
 import { PagamentoController } from '../pagamento/pagamento.controller';
 import { PlanoModule } from '../plano/plano.module';
@@ -41,6 +43,7 @@ const cases = [
   { resource: 'curso', module: CursoModule, controller: CursoController, delegate: 'curso', ids: ['2'] },
   { resource: 'matricula', module: MatriculaModule, controller: MatriculaController, delegate: 'matricula', ids: ['2'] },
   { resource: 'modulo', module: ModuloModule, controller: ModuloController, delegate: 'modulo', ids: ['2'] },
+  { resource: 'notificacao', module: NotificacaoModule, controller: NotificacaoController, delegate: 'notificacao', ids: ['2'] },
   { resource: 'pagamento', module: PagamentoModule, controller: PagamentoController, delegate: 'pagamento', ids: ['2'] },
   { resource: 'plano', module: PlanoModule, controller: PlanoController, delegate: 'plano', ids: ['2'] },
   { resource: 'progresso-aula', module: ProgressoAulaModule, controller: ProgressoAulaController, delegate: 'progressoAula', ids: ['2', '3'] },

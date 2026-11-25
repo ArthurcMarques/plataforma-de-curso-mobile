@@ -7,26 +7,44 @@ import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import * as bcrypt from 'bcrypt';
 import { PerfilUsuario } from '../generated/prisma/enums';
+import { KafkaProducerService } from '../messaging/kafka-producer.service';
 
 @Injectable()
 export class UsuarioService {
-  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: AccessPolicyService,
+    private readonly kafkaProducer: KafkaProducerService,
+  ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
     const perfil = createUsuarioDto.perfil ?? PerfilUsuario.ALUNO;
     const salt = await bcrypt.genSalt();
     const hash = await bcrypt.hash(createUsuarioDto.password, salt);
 
-    return this.prisma.usuario.create({
+    const usuario = await this.prisma.usuario.create({
       data: {
         NomeCompleto: createUsuarioDto.name,
         Email: createUsuarioDto.email,
         SenhaHash: hash,
         // Perfil e dados da conta são gravados na mesma inserção.
         Perfil: perfil,
+        // Presente quando o app já pediu permissão de notificação antes do cadastro; permite o consumer
+        // do Kafka enviar o push de boas-vindas já na primeira notificação, sem esperar um login futuro.
+        PushToken: createUsuarioDto.pushToken,
       },
       omit: { SenhaHash: true },
     });
+
+    // Nunca bloqueia nem falha o cadastro: o producer já absorve qualquer erro de conexão com o Kafka.
+    void this.kafkaProducer.publishUsuarioCriado({
+      idUsuario: usuario.ID_Usuario,
+      nome: usuario.NomeCompleto,
+      email: usuario.Email,
+      dataCadastro: usuario.DataCadastro.toISOString(),
+    });
+
+    return usuario;
   }
 
   // Esta consulta interna inclui o hash para o login; não deve ser usada como resposta pública.
@@ -70,9 +88,15 @@ export class UsuarioService {
         NomeCompleto: updateUsuarioDto.name,
         Email: updateUsuarioDto.email,
         SenhaHash: hash,
+        PushToken: updateUsuarioDto.pushToken,
       },
       omit: { SenhaHash: true },
     });
+  }
+
+  // Chamado pelo login para manter o token de push atualizado a cada vez que o app abre com permissão concedida.
+  updatePushToken(id: number, pushToken: string) {
+    return this.prisma.usuario.update({ where: { ID_Usuario: id }, data: { PushToken: pushToken }, omit: { SenhaHash: true } });
   }
 
   remove(id: number) {

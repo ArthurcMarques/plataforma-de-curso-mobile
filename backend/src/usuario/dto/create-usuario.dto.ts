@@ -1,6 +1,6 @@
 // Contrato de entrada para contas de usuários e seus perfis de acesso. Os decoradores são executados pelo ValidationPipe antes de chamar o serviço.
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString, MinLength, ValidateIf } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength, ValidateIf } from 'class-validator';
 import { PerfilUsuario } from '../../generated/prisma/enums';
 export class CreateUsuarioDto {
   @ApiPropertyOptional({ enum: PerfilUsuario, default: 'ALUNO', description: 'Perfil escolhido no cadastro público.' })
@@ -24,4 +24,9 @@ export class CreateUsuarioDto {
   @IsString()
     @MinLength(6)
     password!: string;
+
+  @ApiPropertyOptional({ description: 'Token do Expo Push, se o app já tiver permissão de notificação no cadastro.' })
+  @IsOptional()
+  @IsString()
+  pushToken?: string;
 }
