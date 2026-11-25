@@ -78,15 +78,19 @@ services:
   # Túnel de saída pro Cloudflare: expõe a api publicamente sem abrir porta no roteador/firewall.
   # TUNNEL_TOKEN vem do painel Cloudflare Zero Trust (Networks > Tunnels > seu túnel > token);
   # a rota pública (hostname -> http://api:3000) é configurada lá, não aqui.
+  # Opcional (profile "tunnel"): "docker compose up -d" sozinho não sobe este serviço, só
+  # "docker compose --profile tunnel up -d". Valor vazio por padrão (não ":?") porque o Compose
+  # interpola o environment de todo serviço no arquivo, mesmo os fora do profile ativo.
   cloudflared:
     image: cloudflare/cloudflared:latest
     command: tunnel --no-autoupdate run
     environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Defina CLOUDFLARE_TUNNEL_TOKEN no .env}
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
     depends_on:
       api:
         condition: service_healthy
     restart: unless-stopped
+    profiles: [tunnel]
 
   # Reutiliza o Dockerfile da API, mas executa apenas o Studio neste container.
   prisma-studio:
