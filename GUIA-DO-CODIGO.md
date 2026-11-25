@@ -1,9 +1,5 @@
 # Guia do código
 
-Os comentários em português descrevem responsabilidades e decisões do código.
-Dependências, cliente Prisma gerado e migrations existentes não foram modificados.
-Arquivos JSON não receberam comentários porque o formato não os permite.
-
 ## Caminho de uma requisição
 
 1. `frontend/src/components/AuthGate.tsx` confirma a sessão com `/auth/me`.
