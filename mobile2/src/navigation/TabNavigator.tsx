@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import AvaliacoesScreen from '../screens/AvaliacoesScreen';
 import CatalogoScreen from '../screens/CatalogoScreen';
 import MeusCursosScreen from '../screens/MeusCursosScreen';
 import NotificacoesScreen from '../screens/NotificacoesScreen';
@@ -15,7 +14,6 @@ type IconName = keyof typeof Ionicons.glyphMap;
 const icones: Record<keyof TabParamList, { ativo: IconName; inativo: IconName }> = {
   'Catálogo': { ativo: 'book', inativo: 'book-outline' },
   'Meus Cursos': { ativo: 'school', inativo: 'school-outline' },
-  'Avaliações': { ativo: 'star', inativo: 'star-outline' },
   'Notificações': { ativo: 'notifications', inativo: 'notifications-outline' },
   Perfil: { ativo: 'person', inativo: 'person-outline' },
 };
@@ -33,7 +31,6 @@ export default function TabNavigator() {
     >
       <Tab.Screen name="Meus Cursos" component={MeusCursosScreen} />
       <Tab.Screen name="Catálogo" component={CatalogoScreen} />
-      <Tab.Screen name="Avaliações" component={AvaliacoesScreen} />
       <Tab.Screen name="Notificações" component={NotificacoesScreen} />
       <Tab.Screen name="Perfil" component={PerfilScreen} />
     </Tab.Navigator>

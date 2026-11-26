@@ -8,7 +8,6 @@ export type AuthStackParamList = {
 export type TabParamList = {
   Catálogo: undefined;
   'Meus Cursos': undefined;
-  'Avaliações': undefined;
   Notificações: undefined;
   Perfil: undefined;
 };
