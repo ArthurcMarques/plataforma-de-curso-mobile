@@ -50,6 +50,18 @@ services:
       retries: 10
       start_period: 20s
 
+  # Interface web para inspecionar tópicos, mensagens e consumer groups do Kafka.
+  kafka-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    environment:
+      KAFKA_CLUSTERS_0_NAME: plataforma-cursos
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - '127.0.0.1:${KAFKA_UI_PORT:-8090}:8080'
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   # A API usa postgres como hostname interno e só inicia após o banco ficar saudável.
   # Publicada em todas as interfaces (sem prefixo de IP) para o app mobile acessar pela rede local.
   api:
