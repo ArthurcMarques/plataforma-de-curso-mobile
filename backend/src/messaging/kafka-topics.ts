@@ -24,6 +24,7 @@ export interface MatriculaCriadaEvent {
   idUsuario: number;
   idCurso: number;
   tituloCurso: string;
+  porOutroUsuario: boolean;
 }
 
 export interface PagamentoConfirmadoEvent {

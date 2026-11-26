@@ -18,8 +18,8 @@ export class MatriculaController {
   @ApiOperation({ summary: 'Criar uma nova matrícula' })
   @ApiResponse({ status: 201, description: 'Matrícula criada com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
-  create(@Body() createMatriculaDto: CreateMatriculaDto) {
-    return this.matriculaService.create(createMatriculaDto);
+  create(@Req() request: AuthenticatedRequest, @Body() createMatriculaDto: CreateMatriculaDto) {
+    return this.matriculaService.create(createMatriculaDto, request.user);
   }
 
   @Get()

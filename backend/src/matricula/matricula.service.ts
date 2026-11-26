@@ -15,7 +15,7 @@ export class MatriculaService {
     private readonly kafkaProducer: KafkaProducerService,
   ) {}
 
-  async create(createMatriculaDto: CreateMatriculaDto) {
+  async create(createMatriculaDto: CreateMatriculaDto, requester: SessionUser) {
     const matricula = await this.prisma.matricula.create({
       data: {
         ID_Usuario: createMatriculaDto.idUsuario,
@@ -32,6 +32,8 @@ export class MatriculaService {
       idUsuario: matricula.ID_Usuario,
       idCurso: matricula.ID_Curso,
       tituloCurso: curso?.Titulo ?? 'curso',
+      // Só um ALUNO matricula a si mesmo (regra da AccessPolicyService); admin pode matricular qualquer um.
+      porOutroUsuario: requester.userId !== matricula.ID_Usuario,
     });
 
     return matricula;

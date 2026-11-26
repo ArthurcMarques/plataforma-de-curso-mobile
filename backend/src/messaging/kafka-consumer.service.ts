@@ -82,7 +82,10 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
       }
       case TOPIC_MATRICULA_CRIADA: {
         const event = payload as MatriculaCriadaEvent;
-        return { idUsuario: event.idUsuario, mensagem: `Você se matriculou no curso ${event.tituloCurso}!`, tipo: 'MATRICULA' };
+        const mensagem = event.porOutroUsuario
+          ? `Você foi matriculado no curso ${event.tituloCurso}.`
+          : `Você se matriculou no curso ${event.tituloCurso}!`;
+        return { idUsuario: event.idUsuario, mensagem, tipo: 'MATRICULA' };
       }
       case TOPIC_PAGAMENTO_CONFIRMADO: {
         const event = payload as PagamentoConfirmadoEvent;
