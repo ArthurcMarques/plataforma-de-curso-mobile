@@ -4,9 +4,10 @@ import { Module } from '@nestjs/common';
 import { MatriculaService } from './matricula.service';
 import { MatriculaController } from './matricula.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MessagingModule } from '../messaging/messaging.module';
 
 @Module({
-  imports: [PrismaModule, AccessPolicyModule],
+  imports: [PrismaModule, AccessPolicyModule, MessagingModule],
   controllers: [MatriculaController],
   providers: [MatriculaService],
 })

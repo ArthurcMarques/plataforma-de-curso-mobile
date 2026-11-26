@@ -4,9 +4,10 @@ import { Module } from '@nestjs/common';
 import { PagamentoService } from './pagamento.service';
 import { PagamentoController } from './pagamento.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { MessagingModule } from '../messaging/messaging.module';
 
 @Module({
-  imports: [PrismaModule, AccessPolicyModule],
+  imports: [PrismaModule, AccessPolicyModule, MessagingModule],
   controllers: [PagamentoController],
   providers: [PagamentoService],
 })

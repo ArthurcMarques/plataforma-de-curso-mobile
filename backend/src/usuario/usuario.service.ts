@@ -59,10 +59,12 @@ export class UsuarioService {
     return this.prisma.usuario.findUnique({ where: { ID_Usuario: id }, omit: { SenhaHash: true } });
   }
 
-  updatePerfil(id: number, perfil: PerfilUsuario) {
-    return this.prisma.usuario.update({
+  async updatePerfil(id: number, perfil: PerfilUsuario) {
+    const usuario = await this.prisma.usuario.update({
       where: { ID_Usuario: id }, data: { Perfil: perfil }, omit: { SenhaHash: true },
     });
+    void this.kafkaProducer.publishPerfilAlterado({ idUsuario: id, perfil });
+    return usuario;
   }
 
   // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.

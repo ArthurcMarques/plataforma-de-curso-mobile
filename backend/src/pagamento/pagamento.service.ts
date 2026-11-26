@@ -5,13 +5,18 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePagamentoDto } from './dto/create-pagamento.dto';
 import { UpdatePagamentoDto } from './dto/update-pagamento.dto';
+import { KafkaProducerService } from '../messaging/kafka-producer.service';
 
 @Injectable()
 export class PagamentoService {
-  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: AccessPolicyService,
+    private readonly kafkaProducer: KafkaProducerService,
+  ) {}
 
-  create(createPagamentoDto: CreatePagamentoDto) {
-    return this.prisma.pagamento.create({
+  async create(createPagamentoDto: CreatePagamentoDto) {
+    const pagamento = await this.prisma.pagamento.create({
       data: {
         ID_Assinatura: createPagamentoDto.idAssinatura,
         ValorPago: createPagamentoDto.valorPago,
@@ -20,6 +25,16 @@ export class PagamentoService {
         Id_Transacao_Gateway: createPagamentoDto.idTransacaoGateway,
       },
     });
+
+    // Pagamento não tem idUsuario direto; o vínculo é pela assinatura.
+    const assinatura = await this.prisma.assinatura.findUnique({
+      where: { ID_Assinatura: pagamento.ID_Assinatura }, select: { ID_Usuario: true },
+    });
+    if (assinatura) {
+      void this.kafkaProducer.publishPagamentoConfirmado({ idUsuario: assinatura.ID_Usuario, valorPago: Number(pagamento.ValorPago) });
+    }
+
+    return pagamento;
   }
 
   // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.

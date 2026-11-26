@@ -1,11 +1,29 @@
-// Consome o evento de cadastro: grava a notificação de boas-vindas direto pelo Prisma (ator interno, fora da
+// Consome os eventos de negócio: grava a notificação correspondente direto pelo Prisma (ator interno, fora da
 // AccessPolicyService) e, se o usuário já tiver um Expo Push Token salvo, envia a notificação real ao celular.
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Admin, Consumer, Kafka } from 'kafkajs';
 import { PrismaService } from '../prisma/prisma.service';
-import { TOPIC_USUARIO_CRIADO, UsuarioCriadoEvent } from './kafka-topics';
+import {
+  CertificadoEmitidoEvent,
+  MatriculaCriadaEvent,
+  PagamentoConfirmadoEvent,
+  PerfilAlteradoEvent,
+  TOPIC_CERTIFICADO_EMITIDO,
+  TOPIC_MATRICULA_CRIADA,
+  TOPIC_PAGAMENTO_CONFIRMADO,
+  TOPIC_PERFIL_ALTERADO,
+  TOPIC_USUARIO_CRIADO,
+  TOPICS,
+  UsuarioCriadoEvent,
+} from './kafka-topics';
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+
+interface NotificacaoParaGravar {
+  idUsuario: number;
+  mensagem: string;
+  tipo: string;
+}
 
 @Injectable()
 export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
@@ -25,24 +43,25 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     try {
-      // Garante o tópico antes de assinar: no primeiro boot ninguém publicou ainda e o broker não cria tópicos sozinho.
+      // Garante os tópicos antes de assinar: no primeiro boot ninguém publicou ainda e o broker não cria tópicos sozinho.
       await this.admin.connect();
-      await this.admin.createTopics({ topics: [{ topic: TOPIC_USUARIO_CRIADO, numPartitions: 1 }] }).catch(() => undefined);
+      await this.admin.createTopics({ topics: TOPICS.map(topic => ({ topic, numPartitions: 1 })) }).catch(() => undefined);
       await this.admin.disconnect();
 
       await this.consumer.connect();
       // true só importa sem offset committed (primeiro boot do grupo); evita perder eventos publicados
       // antes do consumer terminar de entrar no grupo, que leva alguns segundos na primeira conexão.
-      await this.consumer.subscribe({ topic: TOPIC_USUARIO_CRIADO, fromBeginning: true });
+      await this.consumer.subscribe({ topics: TOPICS, fromBeginning: true });
       void this.consumer.run({
-        eachMessage: async ({ message }) => {
+        eachMessage: async ({ topic, message }) => {
           if (!message.value) return;
-          const event = JSON.parse(message.value.toString()) as UsuarioCriadoEvent;
-          const mensagem = `Bem-vindo(a) à plataforma, ${event.nome}!`;
+          const payload = JSON.parse(message.value.toString());
+          const notificacao = this.montarNotificacao(topic, payload);
+          if (!notificacao) return;
           await this.prisma.notificacao.create({
-            data: { ID_Usuario: event.idUsuario, Mensagem: mensagem, Tipo: 'BOAS_VINDAS' },
+            data: { ID_Usuario: notificacao.idUsuario, Mensagem: notificacao.mensagem, Tipo: notificacao.tipo },
           });
-          await this.enviarPush(event.idUsuario, mensagem);
+          await this.enviarPush(notificacao.idUsuario, notificacao.mensagem);
         },
       }).catch(error => this.logger.error(`Falha ao consumir eventos do Kafka: ${(error as Error).message}`));
     } catch (error) {
@@ -52,6 +71,34 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleDestroy() {
     await this.consumer.disconnect().catch(() => undefined);
+  }
+
+  // Traduz cada evento de negócio numa notificação; tópico desconhecido (ou de outra versão do app) é ignorado.
+  private montarNotificacao(topic: string, payload: unknown): NotificacaoParaGravar | null {
+    switch (topic) {
+      case TOPIC_USUARIO_CRIADO: {
+        const event = payload as UsuarioCriadoEvent;
+        return { idUsuario: event.idUsuario, mensagem: `Bem-vindo(a) à plataforma, ${event.nome}!`, tipo: 'BOAS_VINDAS' };
+      }
+      case TOPIC_MATRICULA_CRIADA: {
+        const event = payload as MatriculaCriadaEvent;
+        return { idUsuario: event.idUsuario, mensagem: `Você se matriculou no curso ${event.tituloCurso}!`, tipo: 'MATRICULA' };
+      }
+      case TOPIC_PAGAMENTO_CONFIRMADO: {
+        const event = payload as PagamentoConfirmadoEvent;
+        return { idUsuario: event.idUsuario, mensagem: `Pagamento de R$ ${event.valorPago.toFixed(2)} confirmado!`, tipo: 'PAGAMENTO' };
+      }
+      case TOPIC_CERTIFICADO_EMITIDO: {
+        const event = payload as CertificadoEmitidoEvent;
+        return { idUsuario: event.idUsuario, mensagem: `Certificado emitido para o curso ${event.tituloCurso}!`, tipo: 'CERTIFICADO' };
+      }
+      case TOPIC_PERFIL_ALTERADO: {
+        const event = payload as PerfilAlteradoEvent;
+        return { idUsuario: event.idUsuario, mensagem: `Seu perfil foi alterado para ${event.perfil}.`, tipo: 'PERFIL' };
+      }
+      default:
+        return null;
+    }
   }
 
   // Best-effort: sem token salvo (usuário nunca abriu o app com permissão concedida) ou com o Expo

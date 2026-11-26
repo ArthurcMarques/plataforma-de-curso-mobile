@@ -5,13 +5,18 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMatriculaDto } from './dto/create-matricula.dto';
 import { UpdateMatriculaDto } from './dto/update-matricula.dto';
+import { KafkaProducerService } from '../messaging/kafka-producer.service';
 
 @Injectable()
 export class MatriculaService {
-  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: AccessPolicyService,
+    private readonly kafkaProducer: KafkaProducerService,
+  ) {}
 
-  create(createMatriculaDto: CreateMatriculaDto) {
-    return this.prisma.matricula.create({
+  async create(createMatriculaDto: CreateMatriculaDto) {
+    const matricula = await this.prisma.matricula.create({
       data: {
         ID_Usuario: createMatriculaDto.idUsuario,
         ID_Curso: createMatriculaDto.idCurso,
@@ -21,6 +26,15 @@ export class MatriculaService {
             : new Date(createMatriculaDto.dataConclusao),
       },
     });
+
+    const curso = await this.prisma.curso.findUnique({ where: { ID_Curso: matricula.ID_Curso }, select: { Titulo: true } });
+    void this.kafkaProducer.publishMatriculaCriada({
+      idUsuario: matricula.ID_Usuario,
+      idCurso: matricula.ID_Curso,
+      tituloCurso: curso?.Titulo ?? 'curso',
+    });
+
+    return matricula;
   }
 
   // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.

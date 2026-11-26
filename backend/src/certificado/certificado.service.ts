@@ -5,13 +5,18 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCertificadoDto } from './dto/create-certificado.dto';
 import { UpdateCertificadoDto } from './dto/update-certificado.dto';
+import { KafkaProducerService } from '../messaging/kafka-producer.service';
 
 @Injectable()
 export class CertificadoService {
-  constructor(private readonly prisma: PrismaService, private readonly access: AccessPolicyService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: AccessPolicyService,
+    private readonly kafkaProducer: KafkaProducerService,
+  ) {}
 
-  create(createCertificadoDto: CreateCertificadoDto) {
-    return this.prisma.certificado.create({
+  async create(createCertificadoDto: CreateCertificadoDto) {
+    const certificado = await this.prisma.certificado.create({
       data: {
         ID_Usuario: createCertificadoDto.idUsuario,
         ID_Curso: createCertificadoDto.idCurso,
@@ -19,6 +24,16 @@ export class CertificadoService {
         CodigoVerificacao: createCertificadoDto.codigoVerificacao,
       },
     });
+
+    const curso = await this.prisma.curso.findUnique({ where: { ID_Curso: certificado.ID_Curso }, select: { Titulo: true } });
+    void this.kafkaProducer.publishCertificadoEmitido({
+      idUsuario: certificado.ID_Usuario,
+      idCurso: certificado.ID_Curso,
+      tituloCurso: curso?.Titulo ?? 'curso',
+      codigoVerificacao: certificado.CodigoVerificacao,
+    });
+
+    return certificado;
   }
 
   // O controller encaminha a sessão; a política aplica o escopo antes de consultar o Prisma.
