@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,7 +7,7 @@ import { useCarregamento } from '../hooks/useCarregamento';
 import type { AppStackParamList, TabParamList } from '../navigation/types';
 import { listCursos, listMatriculas, listTrilhaCursos, listTrilhas } from '../services/api';
 import type { Curso, Matricula, Trilha, TrilhaCurso } from '../services/types';
-import { estilos } from '../theme';
+import { cores, estilos } from '../theme';
 
 type Props = {
   navigation: CompositeNavigationProp<
@@ -16,10 +15,6 @@ type Props = {
     NativeStackNavigationProp<AppStackParamList>
   >;
 };
-
-// Cada seção tem sua própria cor de destaque para ficar claro, ao rolar a tela, em qual seção se está.
-const corCursos = '#00b894';
-const corTrilhas = '#7d6b91';
 
 export default function CatalogoScreen({ navigation }: Props) {
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
@@ -57,21 +52,18 @@ export default function CatalogoScreen({ navigation }: Props) {
       contentContainerStyle={estilos.conteudo}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void recarregar()} />}
     >
-      <View style={[styles.secaoHeader, { backgroundColor: corCursos }]}>
-        <Ionicons name="book" size={18} color="#fff" />
-        <Text style={styles.secaoTitulo}>Cursos</Text>
-      </View>
+      <Text style={estilos.secao}>Cursos</Text>
       {cursos.length === 0 && <Text>Nenhum curso disponível.</Text>}
       {cursos.map(curso => {
         const matriculado = matriculas.some(item => item.ID_Curso === curso.ID_Curso);
         return (
-          <View key={curso.ID_Curso} style={[estilos.card, { borderLeftWidth: 4, borderLeftColor: corCursos }]}>
+          <View key={curso.ID_Curso} style={estilos.card}>
             <Text style={estilos.cardTitulo}>{curso.Titulo}</Text>
             {curso.Descricao ? <Text style={estilos.descricao}>{curso.Descricao}</Text> : null}
             <Text style={estilos.meta}>{curso.Nivel} · {curso.TotalAulas} aulas · {curso.TotalHoras}h</Text>
-            {matriculado && <Text style={[styles.badge, { color: corCursos }]}>Matriculado</Text>}
+            {matriculado && <Text style={styles.badge}>Matriculado</Text>}
             <TouchableOpacity
-              style={[estilos.botao, { backgroundColor: corCursos }]}
+              style={estilos.botao}
               onPress={() => navigation.navigate(matriculado ? 'CursoDetail' : 'Pagamento', { idCurso: curso.ID_Curso })}
             >
               <Text style={estilos.botaoTexto}>{matriculado ? 'Ver curso' : 'Matricular-me'}</Text>
@@ -80,17 +72,14 @@ export default function CatalogoScreen({ navigation }: Props) {
         );
       })}
 
-      <View style={[styles.secaoHeader, { backgroundColor: corTrilhas, marginTop: 24 }]}>
-        <Ionicons name="trail-sign" size={18} color="#fff" />
-        <Text style={styles.secaoTitulo}>Trilhas</Text>
-      </View>
+      <Text style={estilos.secao}>Trilhas</Text>
       {trilhas.length === 0 && <Text>Nenhuma trilha cadastrada.</Text>}
       {trilhas.map(trilha => {
         const cursosDaTrilha = (cursosPorTrilha.get(trilha.ID_Trilha) ?? [])
           .map(item => cursoPorId.get(item.ID_Curso))
           .filter((curso): curso is Curso => curso != null);
         return (
-          <View key={trilha.ID_Trilha} style={[estilos.card, { borderLeftWidth: 4, borderLeftColor: corTrilhas }]}>
+          <View key={trilha.ID_Trilha} style={estilos.card}>
             <Text style={estilos.cardTitulo}>{trilha.Titulo}</Text>
             {trilha.Descricao ? <Text style={estilos.descricao}>{trilha.Descricao}</Text> : null}
             {cursosDaTrilha.map((curso, index) => (
@@ -104,8 +93,6 @@ export default function CatalogoScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  secaoHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8 },
-  secaoTitulo: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
   item: { marginLeft: 8 },
-  badge: { fontWeight: 'bold' },
+  badge: { fontWeight: 'bold', color: cores.sucesso },
 });
