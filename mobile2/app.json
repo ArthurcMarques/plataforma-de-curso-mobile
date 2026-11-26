@@ -20,6 +20,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "owner": "arthurcmarques",
+    "extra": {
+      "eas": {
+        "projectId": "0623584a-18a8-40bd-88c4-c36a3122d176"
+      }
     }
   }
 }
