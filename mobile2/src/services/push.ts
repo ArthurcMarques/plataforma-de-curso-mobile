@@ -17,6 +17,7 @@ Notifications.setNotificationHandler({
 // normalmente só sem notificação push real — a notificação continua disponível na aba Notificações.
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   const projectId = process.env.EXPO_PUBLIC_EAS_PROJECT_ID ?? Constants.expoConfig?.extra?.eas?.projectId;
+  console.log('[push] projectId:', projectId);
   if (!projectId) return undefined;
 
   try {
@@ -24,16 +25,19 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
       await Notifications.setNotificationChannelAsync('default', { name: 'default', importance: Notifications.AndroidImportance.DEFAULT });
     }
     const permissao = await Notifications.getPermissionsAsync();
+    console.log('[push] permissao atual:', permissao.status);
     let status = permissao.status;
     if (status !== 'granted') {
       status = (await Notifications.requestPermissionsAsync()).status;
+      console.log('[push] permissao apos pedir:', status);
     }
     if (status !== 'granted') return undefined;
 
     const token = await Notifications.getExpoPushTokenAsync({ projectId });
+    console.log('[push] token obtido:', token.data);
     return token.data;
-  } catch {
-    // Sem dispositivo físico, sem Google Play Services, ou qualquer outra falha de plataforma: segue sem push.
+  } catch (error) {
+    console.log('[push] falhou:', error instanceof Error ? error.message : error);
     return undefined;
   }
 }
