@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import type { SessionUser } from '../auth/session';
 import type {
-  Assinatura, Aula, Curso, Matricula, MetodoPagamento, Modulo, Notificacao, Pagamento, Plano, Trilha, TrilhaCurso,
+  Assinatura, Aula, Avaliacao, Curso, Matricula, MetodoPagamento, Modulo, Notificacao, Pagamento, Plano, Trilha, TrilhaCurso,
 } from './types';
 
 export class ApiError extends Error {
@@ -142,4 +142,39 @@ export function createPagamento(
 
 export function listNotificacoes() {
   return requestAuthenticated<Notificacao[]>('/notificacao');
+}
+
+export function listAssinaturas() {
+  return requestAuthenticated<Assinatura[]>('/assinatura');
+}
+
+export function listPagamentos() {
+  return requestAuthenticated<Pagamento[]>('/pagamento');
+}
+
+export function listAvaliacoes() {
+  return requestAuthenticated<Avaliacao[]>('/avaliacao');
+}
+
+export function createAvaliacao(idUsuario: number, idCurso: number, nota: number, comentario?: string) {
+  return requestAuthenticated<Avaliacao>('/avaliacao', {
+    method: 'POST',
+    body: JSON.stringify({ idUsuario, idCurso, nota, comentario }),
+  });
+}
+
+export function updateAvaliacao(id: number, nota: number, comentario?: string) {
+  return requestAuthenticated<Avaliacao>(`/avaliacao/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ nota, comentario }),
+  });
+}
+
+export function deleteAvaliacao(id: number) {
+  return requestAuthenticated<void>(`/avaliacao/${id}`, { method: 'DELETE' });
+}
+
+// Campos omitidos (undefined) não são enviados; senha vazia preserva a senha atual (mesmo padrão do frontend web).
+export function updateUsuario(id: number, patch: { name?: string; email?: string; password?: string }) {
+  return requestAuthenticated(`/usuario/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 }

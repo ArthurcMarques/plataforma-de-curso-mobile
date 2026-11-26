@@ -76,6 +76,15 @@ export interface Pagamento {
   Id_Transacao_Gateway: string;
 }
 
+export interface Avaliacao {
+  ID_Avaliacao: number;
+  ID_Usuario: number;
+  ID_Curso: number;
+  Nota: number;
+  Comentario: string | null;
+  DataAvaliacao: string;
+}
+
 export interface Notificacao {
   ID_Notificacao: number;
   ID_Usuario: number;
