@@ -54,6 +54,7 @@ export class KafkaConsumerService implements OnModuleInit, OnModuleDestroy {
             data: { ID_Usuario: notificacao.idUsuario, Mensagem: notificacao.mensagem, Tipo: notificacao.tipo },
             select: { usuario: { select: { PushToken: true } } },
           });
+          this.logger.log(`Evento ${topic} processado: notificação "${notificacao.mensagem}" gravada para usuário ${notificacao.idUsuario}`);
           // Não aguardado: o Expo pode demorar, e isso não pode atrasar o commit do offset nem a próxima mensagem.
           void this.enviarPush(criada.usuario.PushToken, notificacao.idUsuario, notificacao.mensagem);
         },

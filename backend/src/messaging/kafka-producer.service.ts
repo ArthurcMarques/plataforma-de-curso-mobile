@@ -28,6 +28,7 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
   async publish<T extends keyof EventosKafka>(topic: T, event: EventosKafka[T]) {
     try {
       await this.producer.send({ topic, messages: [{ value: JSON.stringify(event) }] });
+      this.logger.log(`Evento publicado (${topic}): ${JSON.stringify(event)}`);
     } catch (error) {
       this.logger.error(`Falha ao publicar evento (${topic}): ${(error as Error).message}`);
     }
