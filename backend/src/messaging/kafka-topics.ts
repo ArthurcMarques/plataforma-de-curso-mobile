@@ -1,41 +1,24 @@
 // Fonte única de verdade dos tópicos e dos formatos de evento compartilhados entre producer e consumer.
-export const TOPIC_USUARIO_CRIADO = 'usuario.criado';
-export const TOPIC_MATRICULA_CRIADA = 'matricula.criada';
-export const TOPIC_PAGAMENTO_CONFIRMADO = 'pagamento.confirmado';
-export const TOPIC_CERTIFICADO_EMITIDO = 'certificado.emitido';
-export const TOPIC_PERFIL_ALTERADO = 'usuario.perfil-alterado';
-
-export const TOPICS = [
-  TOPIC_USUARIO_CRIADO,
-  TOPIC_MATRICULA_CRIADA,
-  TOPIC_PAGAMENTO_CONFIRMADO,
-  TOPIC_CERTIFICADO_EMITIDO,
-  TOPIC_PERFIL_ALTERADO,
-];
-
+// Os eventos carregam só ids: quem busca nome/título/destinatário é o consumer, que já consulta o
+// Prisma por mensagem de qualquer forma - evita repetir a mesma consulta em cada serviço que publica.
 export interface UsuarioCriadoEvent {
   idUsuario: number;
-  nome: string;
-  email: string;
-  dataCadastro: string;
 }
 
 export interface MatriculaCriadaEvent {
   idUsuario: number;
   idCurso: number;
-  tituloCurso: string;
-  porOutroUsuario: boolean;
+  idAtor: number;
 }
 
 export interface PagamentoConfirmadoEvent {
-  idUsuario: number;
+  idAssinatura: number;
   valorPago: number;
 }
 
 export interface CertificadoEmitidoEvent {
   idUsuario: number;
   idCurso: number;
-  tituloCurso: string;
   codigoVerificacao: string;
 }
 
@@ -43,3 +26,19 @@ export interface PerfilAlteradoEvent {
   idUsuario: number;
   perfil: string;
 }
+
+export interface EventosKafka {
+  'usuario.criado': UsuarioCriadoEvent;
+  'matricula.criada': MatriculaCriadaEvent;
+  'pagamento.confirmado': PagamentoConfirmadoEvent;
+  'certificado.emitido': CertificadoEmitidoEvent;
+  'usuario.perfil-alterado': PerfilAlteradoEvent;
+}
+
+export const TOPICS = [
+  'usuario.criado',
+  'matricula.criada',
+  'pagamento.confirmado',
+  'certificado.emitido',
+  'usuario.perfil-alterado',
+] as const satisfies readonly (keyof EventosKafka)[];

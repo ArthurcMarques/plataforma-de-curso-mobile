@@ -42,7 +42,7 @@ describe('Cadastro com perfil', () => {
       UsuarioService,
       { provide: PrismaService, useValue: { usuario: { create } } },
       { provide: AccessPolicyService, useValue: {} },
-      { provide: KafkaProducerService, useValue: { publishUsuarioCriado: jest.fn() } },
+      { provide: KafkaProducerService, useValue: { publish: jest.fn() } },
     ] }).compile();
     service = module.get(UsuarioService);
   });

@@ -26,13 +26,11 @@ export class PagamentoService {
       },
     });
 
-    // Pagamento não tem idUsuario direto; o vínculo é pela assinatura.
-    const assinatura = await this.prisma.assinatura.findUnique({
-      where: { ID_Assinatura: pagamento.ID_Assinatura }, select: { ID_Usuario: true },
+    // Pagamento não tem idUsuario direto; o consumer resolve o destinatário pela assinatura.
+    void this.kafkaProducer.publish('pagamento.confirmado', {
+      idAssinatura: pagamento.ID_Assinatura,
+      valorPago: Number(pagamento.ValorPago),
     });
-    if (assinatura) {
-      void this.kafkaProducer.publishPagamentoConfirmado({ idUsuario: assinatura.ID_Usuario, valorPago: Number(pagamento.ValorPago) });
-    }
 
     return pagamento;
   }

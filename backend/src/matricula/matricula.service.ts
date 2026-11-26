@@ -27,13 +27,12 @@ export class MatriculaService {
       },
     });
 
-    const curso = await this.prisma.curso.findUnique({ where: { ID_Curso: matricula.ID_Curso }, select: { Titulo: true } });
-    void this.kafkaProducer.publishMatriculaCriada({
+    void this.kafkaProducer.publish('matricula.criada', {
       idUsuario: matricula.ID_Usuario,
       idCurso: matricula.ID_Curso,
-      tituloCurso: curso?.Titulo ?? 'curso',
       // Só um ALUNO matricula a si mesmo (regra da AccessPolicyService); admin pode matricular qualquer um.
-      porOutroUsuario: requester.userId !== matricula.ID_Usuario,
+      // O consumer resolve o título do curso e decide a mensagem comparando idAtor com idUsuario.
+      idAtor: requester.userId,
     });
 
     return matricula;

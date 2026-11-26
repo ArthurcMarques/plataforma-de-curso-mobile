@@ -25,11 +25,9 @@ export class CertificadoService {
       },
     });
 
-    const curso = await this.prisma.curso.findUnique({ where: { ID_Curso: certificado.ID_Curso }, select: { Titulo: true } });
-    void this.kafkaProducer.publishCertificadoEmitido({
+    void this.kafkaProducer.publish('certificado.emitido', {
       idUsuario: certificado.ID_Usuario,
       idCurso: certificado.ID_Curso,
-      tituloCurso: curso?.Titulo ?? 'curso',
       codigoVerificacao: certificado.CodigoVerificacao,
     });
 

@@ -37,12 +37,7 @@ export class UsuarioService {
     });
 
     // Nunca bloqueia nem falha o cadastro: o producer já absorve qualquer erro de conexão com o Kafka.
-    void this.kafkaProducer.publishUsuarioCriado({
-      idUsuario: usuario.ID_Usuario,
-      nome: usuario.NomeCompleto,
-      email: usuario.Email,
-      dataCadastro: usuario.DataCadastro.toISOString(),
-    });
+    void this.kafkaProducer.publish('usuario.criado', { idUsuario: usuario.ID_Usuario });
 
     return usuario;
   }
@@ -63,7 +58,7 @@ export class UsuarioService {
     const usuario = await this.prisma.usuario.update({
       where: { ID_Usuario: id }, data: { Perfil: perfil }, omit: { SenhaHash: true },
     });
-    void this.kafkaProducer.publishPerfilAlterado({ idUsuario: id, perfil });
+    void this.kafkaProducer.publish('usuario.perfil-alterado', { idUsuario: id, perfil });
     return usuario;
   }
 

@@ -174,8 +174,11 @@ export class AccessPolicyService {
       return;
     }
     // O aluno só pode criar ou alterar vínculos em seu próprio nome; pagamento não tem idUsuario direto, valida pela assinatura.
-    if (resource !== 'pagamento' && (body.idUsuario ?? existing?.ID_Usuario) !== user.userId) throw new ForbiddenException('Nao e permitido agir em nome de outro aluno.');
-    if (resource === 'pagamento') await this.ownsSubscription(body.idAssinatura, user);
+    if (resource === 'pagamento') {
+      await this.ownsSubscription(body.idAssinatura, user);
+    } else if ((body.idUsuario ?? existing?.ID_Usuario) !== user.userId) {
+      throw new ForbiddenException('Nao e permitido agir em nome de outro aluno.');
+    }
     if (resource === 'matricula') {
       if (body.dataConclusao != null) throw new ForbiddenException('Conclusao da matricula exige administrador.');
       if (!Number.isInteger(body.idCurso)) throw new BadRequestException('idCurso deve ser inteiro.');
