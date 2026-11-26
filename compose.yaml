@@ -92,6 +92,17 @@ services:
     restart: unless-stopped
     profiles: [tunnel]
 
+  # Metro do mobile2 sempre ligado no homeserver: o Expo Go conecta por domínio proprio em vez de
+  # exigir o PC de desenvolvimento aberto na mesma rede. Opcional (profile "mobile"). EXPO_PUBLIC_API_URL
+  # vem do mobile2/.env (precisa existir no servidor, igual ao .env da raiz). EXPO_PACKAGER_HOSTNAME faz
+  # o manifesto/bundle apontarem pro dominio publico em vez do IP interno do container.
+  mobile:
+    build: ./mobile2
+    environment:
+      EXPO_PACKAGER_HOSTNAME: ${MOBILE_HOSTNAME:-}
+    restart: unless-stopped
+    profiles: [mobile]
+
   # Reutiliza o Dockerfile da API, mas executa apenas o Studio neste container.
   prisma-studio:
     build: ./backend
