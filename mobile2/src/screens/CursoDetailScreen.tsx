@@ -1,10 +1,11 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCarregamento } from '../hooks/useCarregamento';
 import type { AppStackParamList } from '../navigation/types';
 import { listAulas, listCursos, listModulos } from '../services/api';
 import type { Aula, Curso, Modulo } from '../services/types';
+import { cores, estilos } from '../theme';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'CursoDetail'>;
 
@@ -21,71 +22,57 @@ function contentUrl(value: string | null) {
 
 export default function CursoDetailScreen({ route }: Props) {
   const { idCurso } = route.params;
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
   const [curso, setCurso] = useState<Curso | null>(null);
   const [modulos, setModulos] = useState<Modulo[]>([]);
   const [aulas, setAulas] = useState<Aula[]>([]);
 
-  async function carregar() {
-    try {
-      const [cursos, modulosResult, aulasResult] = await Promise.all([listCursos(), listModulos(), listAulas()]);
-      setCurso(cursos.find(item => item.ID_Curso === idCurso) ?? null);
-      setModulos(modulosResult.filter(item => item.ID_Curso === idCurso).sort((a, b) => a.Ordem - b.Ordem));
-      setAulas(aulasResult);
-      setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível carregar o curso.');
+  const { loading, refreshing, error, recarregar } = useCarregamento(async () => {
+    const [cursos, modulosResult, aulasResult] = await Promise.all([listCursos(), listModulos(), listAulas()]);
+    setCurso(cursos.find(item => item.ID_Curso === idCurso) ?? null);
+    setModulos(modulosResult.filter(item => item.ID_Curso === idCurso).sort((a, b) => a.Ordem - b.Ordem));
+    setAulas(aulasResult);
+  }, 'Não foi possível carregar o curso.', [idCurso]);
+
+  // Agrupa uma vez por módulo em vez de filtrar a lista inteira de aulas a cada módulo renderizado.
+  const aulasPorModulo = useMemo(() => {
+    const mapa = new Map<number, Aula[]>();
+    for (const aula of aulas) {
+      const grupo = mapa.get(aula.ID_Modulo) ?? [];
+      grupo.push(aula);
+      mapa.set(aula.ID_Modulo, grupo);
     }
-  }
+    for (const grupo of mapa.values()) grupo.sort((a, b) => a.Ordem - b.Ordem);
+    return mapa;
+  }, [aulas]);
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      setLoading(true);
-      carregar().finally(() => { if (active) setLoading(false); });
-      return () => { active = false; };
-    }, [idCurso]),
-  );
-
-  async function recarregar() {
-    setRefreshing(true);
-    await carregar();
-    setRefreshing(false);
-  }
-
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" /></View>;
-  if (error) return <View style={styles.center}><Text style={styles.erro}>{error}</Text></View>;
+  if (loading) return <View style={estilos.center}><ActivityIndicator size="large" /></View>;
+  if (error) return <View style={estilos.center}><Text style={estilos.erro}>{error}</Text></View>;
 
   return (
     <ScrollView
-      contentContainerStyle={styles.conteudo}
+      contentContainerStyle={estilos.conteudo}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void recarregar()} />}
     >
       <Text style={styles.titulo}>{curso?.Titulo}</Text>
-      {curso?.Descricao ? <Text style={styles.descricao}>{curso.Descricao}</Text> : null}
+      {curso?.Descricao ? <Text style={estilos.descricao}>{curso.Descricao}</Text> : null}
       {modulos.length === 0 && <Text>Nenhum módulo disponível.</Text>}
       {modulos.map(modulo => (
-        <View key={modulo.ID_Modulo} style={styles.card}>
-          <Text style={styles.moduloTitulo}>{modulo.Ordem}. {modulo.Titulo}</Text>
-          {aulas
-            .filter(aula => aula.ID_Modulo === modulo.ID_Modulo)
-            .sort((a, b) => a.Ordem - b.Ordem)
-            .map(aula => {
-              const url = contentUrl(aula.URL_Conteudo);
-              return (
-                <View key={aula.ID_Aula} style={styles.aula}>
-                  <Text>{aula.Titulo}</Text>
-                  <Text style={styles.meta}>{aula.TipoConteudo} · {aula.DuracaoMinutos ?? '-'} min</Text>
-                  {url && (
-                    <TouchableOpacity onPress={() => void Linking.openURL(url)}>
-                      <Text style={styles.link}>Abrir conteúdo</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })}
+        <View key={modulo.ID_Modulo} style={estilos.card}>
+          <Text style={estilos.cardTitulo}>{modulo.Ordem}. {modulo.Titulo}</Text>
+          {(aulasPorModulo.get(modulo.ID_Modulo) ?? []).map(aula => {
+            const url = contentUrl(aula.URL_Conteudo);
+            return (
+              <View key={aula.ID_Aula} style={styles.aula}>
+                <Text>{aula.Titulo}</Text>
+                <Text style={estilos.meta}>{aula.TipoConteudo} · {aula.DuracaoMinutos ?? '-'} min</Text>
+                {url && (
+                  <TouchableOpacity onPress={() => void Linking.openURL(url)}>
+                    <Text style={styles.link}>Abrir conteúdo</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          })}
         </View>
       ))}
     </ScrollView>
@@ -93,14 +80,7 @@ export default function CursoDetailScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  conteudo: { padding: 16, gap: 12 },
   titulo: { fontSize: 22, fontWeight: 'bold' },
-  descricao: { color: '#636e72' },
-  card: { padding: 16, borderRadius: 8, borderWidth: 1, borderColor: '#dfe6e9', gap: 8 },
-  moduloTitulo: { fontSize: 16, fontWeight: 'bold' },
   aula: { borderTopWidth: 1, borderTopColor: '#f0f0f0', paddingTop: 8, gap: 2 },
-  meta: { color: '#636e72' },
-  link: { color: '#6c5ce7', fontWeight: 'bold' },
-  erro: { color: '#d63031' },
+  link: { color: cores.primaria, fontWeight: 'bold' },
 });

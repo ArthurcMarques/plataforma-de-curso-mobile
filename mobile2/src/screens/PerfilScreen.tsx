@@ -2,10 +2,11 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
 import { profileNames, useSession } from '../auth/session';
 import type { AppStackParamList, TabParamList } from '../navigation/types';
 import { updateUsuario } from '../services/api';
+import { cores, estilos } from '../theme';
 
 type Props = {
   navigation: CompositeNavigationProp<
@@ -44,12 +45,12 @@ export default function PerfilScreen({ navigation }: Props) {
       <Text style={styles.titulo}>Perfil</Text>
       <Text style={styles.linha}>{profileNames[user.perfil]}</Text>
 
-      {error ? <Text style={styles.erro}>{error}</Text> : null}
+      {error ? <Text style={estilos.erro}>{error}</Text> : null}
       {sucesso ? <Text style={styles.sucesso}>{sucesso}</Text> : null}
 
-      <TextInput style={styles.input} placeholder="Nome completo" editable={!busy} value={nome} onChangeText={setNome} />
+      <TextInput style={estilos.input} placeholder="Nome completo" editable={!busy} value={nome} onChangeText={setNome} />
       <TextInput
-        style={styles.input}
+        style={estilos.input}
         placeholder="E-mail"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -58,15 +59,15 @@ export default function PerfilScreen({ navigation }: Props) {
         onChangeText={setEmail}
       />
       <TextInput
-        style={styles.input}
+        style={estilos.input}
         placeholder="Nova senha (deixe em branco para manter)"
         secureTextEntry
         editable={!busy}
         value={senha}
         onChangeText={setSenha}
       />
-      <TouchableOpacity style={styles.botao} disabled={busy} onPress={() => void salvar()}>
-        {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.botaoTexto}>Salvar</Text>}
+      <TouchableOpacity style={[estilos.botao, { height: 50 }]} disabled={busy} onPress={() => void salvar()}>
+        {busy ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botaoTexto}>Salvar</Text>}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.botaoSecundario} onPress={() => navigation.navigate('Assinatura')}>
@@ -74,7 +75,7 @@ export default function PerfilScreen({ navigation }: Props) {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.botaoSair} onPress={logout}>
-        <Text style={styles.botaoTexto}>Sair</Text>
+        <Text style={estilos.botaoTexto}>Sair</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -83,13 +84,9 @@ export default function PerfilScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flexGrow: 1, justifyContent: 'center', padding: 24, gap: 12 },
   titulo: { fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
-  linha: { fontSize: 16, textAlign: 'center', color: '#636e72', marginBottom: 8 },
-  input: { height: 50, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#dfe6e9' },
-  botao: { height: 50, marginTop: 8, borderRadius: 8, backgroundColor: '#6c5ce7', justifyContent: 'center', alignItems: 'center' },
-  botaoSecundario: { height: 50, borderRadius: 8, borderWidth: 1, borderColor: '#6c5ce7', justifyContent: 'center', alignItems: 'center' },
-  botaoSecundarioTexto: { color: '#6c5ce7', fontWeight: 'bold' },
-  botaoSair: { marginTop: 24, height: 50, borderRadius: 8, backgroundColor: '#d63031', justifyContent: 'center', alignItems: 'center' },
-  botaoTexto: { color: '#fff', fontWeight: 'bold' },
-  erro: { color: '#d63031' },
-  sucesso: { color: '#00b894' },
+  linha: { fontSize: 16, textAlign: 'center', color: cores.textoSecundario, marginBottom: 8 },
+  botaoSecundario: { height: 50, borderRadius: 8, borderWidth: 1, borderColor: cores.primaria, justifyContent: 'center', alignItems: 'center' },
+  botaoSecundarioTexto: { color: cores.primaria, fontWeight: 'bold' },
+  botaoSair: { marginTop: 24, height: 50, borderRadius: 8, backgroundColor: cores.perigo, justifyContent: 'center', alignItems: 'center' },
+  sucesso: { color: cores.sucesso },
 });

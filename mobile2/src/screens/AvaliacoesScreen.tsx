@@ -1,79 +1,52 @@
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSession } from '../auth/session';
+import { useCarregamento } from '../hooks/useCarregamento';
 import { createAvaliacao, deleteAvaliacao, listAvaliacoes, listCursos, listMatriculas, updateAvaliacao } from '../services/api';
+import { cursosMatriculados } from '../services/selectors';
 import type { Avaliacao, Curso, Matricula } from '../services/types';
+import { cores, estilos } from '../theme';
 
 const notas = [1, 2, 3, 4, 5];
 
 export default function AvaliacoesScreen() {
   const { user } = useSession();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
   const [matriculas, setMatriculas] = useState<Matricula[]>([]);
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [salvandoCurso, setSalvandoCurso] = useState<number | null>(null);
+  // Só guarda o que o usuário editou nesta sessão; sem entrada aqui, o padrão vem da avaliação já salva.
   const [rascunhos, setRascunhos] = useState<Record<number, { nota: number; comentario: string }>>({});
 
-  async function carregar() {
-    try {
-      const [matriculasResult, cursosResult, avaliacoesResult] = await Promise.all([listMatriculas(), listCursos(), listAvaliacoes()]);
-      setMatriculas(matriculasResult);
-      setCursos(cursosResult);
-      setAvaliacoes(avaliacoesResult);
-      setRascunhos(current => {
-        const atualizado = { ...current };
-        for (const avaliacao of avaliacoesResult) {
-          if (!atualizado[avaliacao.ID_Curso]) {
-            atualizado[avaliacao.ID_Curso] = { nota: avaliacao.Nota, comentario: avaliacao.Comentario ?? '' };
-          }
-        }
-        return atualizado;
-      });
-      setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível carregar as avaliações.');
-    }
+  const { loading, refreshing, error: erroCarregamento, recarregar } = useCarregamento(async () => {
+    const [matriculasResult, cursosResult, avaliacoesResult] = await Promise.all([listMatriculas(), listCursos(), listAvaliacoes()]);
+    setMatriculas(matriculasResult);
+    setCursos(cursosResult);
+    setAvaliacoes(avaliacoesResult);
+  }, 'Não foi possível carregar as avaliações.');
+
+  const [erroSalvar, setErroSalvar] = useState('');
+  const error = erroCarregamento || erroSalvar;
+
+  function rascunho(idCurso: number, existente: Avaliacao | undefined) {
+    return rascunhos[idCurso] ?? { nota: existente?.Nota ?? 5, comentario: existente?.Comentario ?? '' };
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      setLoading(true);
-      carregar().finally(() => { if (active) setLoading(false); });
-      return () => { active = false; };
-    }, []),
-  );
-
-  async function recarregar() {
-    setRefreshing(true);
-    await carregar();
-    setRefreshing(false);
-  }
-
-  function rascunho(idCurso: number) {
-    return rascunhos[idCurso] ?? { nota: 5, comentario: '' };
-  }
-
-  function atualizarRascunho(idCurso: number, patch: Partial<{ nota: number; comentario: string }>) {
-    setRascunhos(current => ({ ...current, [idCurso]: { ...rascunho(idCurso), ...patch } }));
+  function atualizarRascunho(idCurso: number, existente: Avaliacao | undefined, patch: Partial<{ nota: number; comentario: string }>) {
+    setRascunhos(current => ({ ...current, [idCurso]: { ...rascunho(idCurso, existente), ...patch } }));
   }
 
   async function salvar(idCurso: number, avaliacaoExistente: Avaliacao | undefined) {
-    const { nota, comentario } = rascunho(idCurso);
+    const { nota, comentario } = rascunho(idCurso, avaliacaoExistente);
     setSalvandoCurso(idCurso);
+    setErroSalvar('');
     try {
-      if (avaliacaoExistente) {
-        await updateAvaliacao(avaliacaoExistente.ID_Avaliacao, nota, comentario || undefined);
-      } else {
-        await createAvaliacao(user.userId, idCurso, nota, comentario || undefined);
-      }
-      await carregar();
+      const salva = avaliacaoExistente
+        ? await updateAvaliacao(avaliacaoExistente.ID_Avaliacao, nota, comentario || undefined)
+        : await createAvaliacao(user.userId, idCurso, nota, comentario || undefined);
+      setAvaliacoes(current => [...current.filter(item => item.ID_Curso !== idCurso), salva]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível salvar a avaliação.');
+      setErroSalvar(err instanceof Error ? err.message : 'Não foi possível salvar a avaliação.');
     } finally {
       setSalvandoCurso(null);
     }
@@ -81,63 +54,62 @@ export default function AvaliacoesScreen() {
 
   async function excluir(avaliacaoExistente: Avaliacao) {
     setSalvandoCurso(avaliacaoExistente.ID_Curso);
+    setErroSalvar('');
     try {
       await deleteAvaliacao(avaliacaoExistente.ID_Avaliacao);
-      await carregar();
+      setAvaliacoes(current => current.filter(item => item.ID_Avaliacao !== avaliacaoExistente.ID_Avaliacao));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível excluir a avaliação.');
+      setErroSalvar(err instanceof Error ? err.message : 'Não foi possível excluir a avaliação.');
     } finally {
       setSalvandoCurso(null);
     }
   }
 
-  if (loading) return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+  if (loading) return <View style={estilos.center}><ActivityIndicator size="large" /></View>;
 
-  const meusCursos = matriculas
-    .map(matricula => cursos.find(curso => curso.ID_Curso === matricula.ID_Curso))
-    .filter((curso): curso is Curso => curso != null);
+  const meusCursos = cursosMatriculados(matriculas, cursos);
 
   return (
     <ScrollView
-      contentContainerStyle={styles.conteudo}
+      contentContainerStyle={estilos.conteudo}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void recarregar()} />}
     >
-      {error ? <Text style={styles.erro}>{error}</Text> : null}
+      {error ? <Text style={estilos.erro}>{error}</Text> : null}
       {meusCursos.length === 0 && <Text>Matricule-se em um curso para poder avaliá-lo.</Text>}
       {meusCursos.map(curso => {
         const avaliacaoExistente = avaliacoes.find(item => item.ID_Curso === curso.ID_Curso);
-        const draft = rascunho(curso.ID_Curso);
+        const draft = rascunho(curso.ID_Curso, avaliacaoExistente);
         const salvando = salvandoCurso === curso.ID_Curso;
         return (
-          <View key={curso.ID_Curso} style={styles.card}>
-            <Text style={styles.titulo}>{curso.Titulo}</Text>
+          <View key={curso.ID_Curso} style={estilos.card}>
+            <Text style={estilos.cardTitulo}>{curso.Titulo}</Text>
             <View style={styles.notas}>
               {notas.map(valor => (
                 <TouchableOpacity
                   key={valor}
                   disabled={salvando}
                   style={[styles.nota, draft.nota === valor && styles.notaAtiva]}
-                  onPress={() => atualizarRascunho(curso.ID_Curso, { nota: valor })}
+                  onPress={() => atualizarRascunho(curso.ID_Curso, avaliacaoExistente, { nota: valor })}
                 >
                   <Text style={[styles.notaTexto, draft.nota === valor && styles.notaTextoAtivo]}>{valor}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <TextInput
-              style={styles.input}
+              style={estilos.input}
               placeholder="Comentário (opcional)"
               editable={!salvando}
               value={draft.comentario}
-              onChangeText={texto => atualizarRascunho(curso.ID_Curso, { comentario: texto })}
+              onChangeText={texto => atualizarRascunho(curso.ID_Curso, avaliacaoExistente, { comentario: texto })}
               multiline
             />
             <View style={styles.botoes}>
-              <TouchableOpacity style={styles.botao} disabled={salvando} onPress={() => void salvar(curso.ID_Curso, avaliacaoExistente)}>
-                {salvando ? <ActivityIndicator color="#fff" /> : <Text style={styles.botaoTexto}>{avaliacaoExistente ? 'Atualizar' : 'Avaliar'}</Text>}
+              <TouchableOpacity style={[estilos.botao, styles.botaoFlex]} disabled={salvando} onPress={() => void salvar(curso.ID_Curso, avaliacaoExistente)}>
+                {salvando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botaoTexto}>{avaliacaoExistente ? 'Atualizar' : 'Avaliar'}</Text>}
               </TouchableOpacity>
               {avaliacaoExistente && (
                 <TouchableOpacity style={styles.botaoExcluir} disabled={salvando} onPress={() => void excluir(avaliacaoExistente)}>
-                  <Text style={styles.botaoTexto}>Excluir</Text>
+                  <Text style={estilos.botaoTexto}>Excluir</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -148,20 +120,13 @@ export default function AvaliacoesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  conteudo: { padding: 16, gap: 12 },
-  card: { padding: 16, borderRadius: 8, borderWidth: 1, borderColor: '#dfe6e9', gap: 8 },
-  titulo: { fontSize: 16, fontWeight: 'bold' },
-  notas: { flexDirection: 'row', gap: 8 },
-  nota: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#dfe6e9', justifyContent: 'center', alignItems: 'center' },
-  notaAtiva: { backgroundColor: '#6c5ce7', borderColor: '#6c5ce7' },
-  notaTexto: { fontWeight: 'bold', color: '#2d3436' },
+const styles = {
+  notas: { flexDirection: 'row' as const, gap: 8 },
+  nota: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: cores.borda, justifyContent: 'center' as const, alignItems: 'center' as const },
+  notaAtiva: { backgroundColor: cores.primaria, borderColor: cores.primaria },
+  notaTexto: { fontWeight: 'bold' as const, color: '#2d3436' },
   notaTextoAtivo: { color: '#fff' },
-  input: { minHeight: 44, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#dfe6e9' },
-  botoes: { flexDirection: 'row', gap: 8 },
-  botao: { flex: 1, height: 44, borderRadius: 8, backgroundColor: '#6c5ce7', justifyContent: 'center', alignItems: 'center' },
-  botaoExcluir: { height: 44, paddingHorizontal: 16, borderRadius: 8, backgroundColor: '#d63031', justifyContent: 'center', alignItems: 'center' },
-  botaoTexto: { color: '#fff', fontWeight: 'bold' },
-  erro: { color: '#d63031' },
-});
+  botoes: { flexDirection: 'row' as const, gap: 8 },
+  botaoFlex: { flex: 1, marginTop: 0 },
+  botaoExcluir: { height: 44, paddingHorizontal: 16, borderRadius: 8, backgroundColor: cores.perigo, justifyContent: 'center' as const, alignItems: 'center' as const },
+};

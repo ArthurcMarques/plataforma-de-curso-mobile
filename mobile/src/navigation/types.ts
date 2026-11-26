@@ -5,8 +5,4 @@ export type RootStackParamList = {
   Principal: undefined;
 };
 
-export type TabParamList = {
-  Cursos: undefined;
-  Matrículas: undefined;
-  Perfil: undefined;
-};
+export type TabParamList = Record<TelaNome, undefined>;

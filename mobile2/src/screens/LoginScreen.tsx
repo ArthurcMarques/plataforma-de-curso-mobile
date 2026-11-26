@@ -1,9 +1,10 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import type { AuthStackParamList } from '../navigation/types';
 import { login } from '../services/api';
 import { registerForPushNotificationsAsync } from '../services/push';
+import { authStyles as styles } from './authStyles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'> & { onLoggedIn: () => void };
 
@@ -57,13 +58,3 @@ export default function LoginScreen({ navigation, onLoggedIn }: Props) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  titulo: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
-  erro: { color: '#d63031' },
-  input: { height: 50, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: '#dfe6e9' },
-  botao: { height: 50, marginTop: 8, borderRadius: 8, backgroundColor: '#6c5ce7', justifyContent: 'center', alignItems: 'center' },
-  botaoTexto: { color: '#fff', fontWeight: 'bold' },
-  link: { color: '#6c5ce7', fontWeight: 'bold', textAlign: 'center', marginTop: 4 },
-});
