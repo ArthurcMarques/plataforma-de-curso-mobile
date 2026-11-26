@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 // Paleta e blocos de estilo repetidos em várias telas; cada tela ainda define o que for específico dela.
 export const cores = {
-  primaria: '#6c5ce7',
+  primaria: '#2F6690',
   perigo: '#d63031',
   sucesso: '#00b894',
   aviso: '#e17055',

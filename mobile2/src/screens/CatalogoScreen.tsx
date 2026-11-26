@@ -19,7 +19,7 @@ type Props = {
 
 // Cada seção tem sua própria cor de destaque para ficar claro, ao rolar a tela, em qual seção se está.
 const corCursos = '#00b894';
-const corTrilhas = '#6c5ce7';
+const corTrilhas = '#7d6b91';
 
 export default function CatalogoScreen({ navigation }: Props) {
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
